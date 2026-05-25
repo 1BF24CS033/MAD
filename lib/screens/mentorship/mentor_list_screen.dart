@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
+import '../../providers/mentor_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../theme/app_theme.dart';
-import '../../utils/dummy_data.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/search_bar_widget.dart';
+import '../sessions/request_session_screen.dart';
 import 'mentor_opt_in_screen.dart';
 
 class MentorListScreen extends StatefulWidget {
@@ -39,23 +42,21 @@ class _MentorListScreenState extends State<MentorListScreen> {
     'Digital Logic Design',
   ];
 
-  List<Map<String, dynamic>> get _filteredMentors {
-    return DummyData.mentors.where((m) {
-      final matchesSearch = _searchQuery.isEmpty ||
-          m['name'].toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          (m['topics'] as List).any(
-              (t) => t.toLowerCase().contains(_searchQuery.toLowerCase()));
-      final matchesSem = _semesterFilter == null ||
-          m['semester'].toString() == _semesterFilter;
-      final matchesSubject = _subjectFilter == null ||
-          (m['topics'] as List)
-              .any((t) => t.toLowerCase().contains(_subjectFilter!.toLowerCase()));
-      return matchesSearch && matchesSem && matchesSubject;
-    }).toList();
+  void _applyFilters() {
+    context.read<MentorProvider>().loadMentors(
+          searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+          semester: _semesterFilter != null
+              ? int.tryParse(_semesterFilter!)
+              : null,
+          topic: _subjectFilter,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
+    final mentorProvider = context.watch<MentorProvider>();
+    final mentors = mentorProvider.mentors;
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -76,7 +77,10 @@ class _MentorListScreenState extends State<MentorListScreen> {
               const SizedBox(height: 16),
               // Search
               SearchBarWidget(
-                onChanged: (v) => setState(() => _searchQuery = v),
+                onChanged: (v) {
+                  setState(() => _searchQuery = v);
+                  _applyFilters();
+                },
               ).animate().fadeIn(duration: 400.ms),
               const SizedBox(height: 14),
               // Filters
@@ -85,30 +89,38 @@ class _MentorListScreenState extends State<MentorListScreen> {
                   // Semester Dropdown
                   Expanded(
                     child: GlassCard(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 2),
                       margin: EdgeInsets.zero,
                       child: DropdownButtonFormField<String>(
                         value: _semesterFilter,
                         isExpanded: true,
                         dropdownColor: AppColors.cardBg,
-                        icon: const Icon(Icons.arrow_drop_down, color: AppColors.primaryGreen),
-                        style: const TextStyle(color: AppColors.white, fontSize: 14),
+                        icon: const Icon(Icons.arrow_drop_down,
+                            color: AppColors.primaryGreen),
+                        style: const TextStyle(
+                            color: AppColors.white, fontSize: 14),
                         decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.calendar_today_rounded, size: 18, color: AppColors.primaryGreen),
+                          prefixIcon: Icon(Icons.calendar_today_rounded,
+                              size: 18, color: AppColors.primaryGreen),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 12),
+                          contentPadding:
+                              EdgeInsets.symmetric(vertical: 12),
                           filled: false,
                         ),
                         hint: const Text(
                           'All Semesters',
-                          style: TextStyle(color: AppColors.subtleText, fontSize: 13),
+                          style: TextStyle(
+                              color: AppColors.subtleText, fontSize: 13),
                         ),
                         items: [
                           const DropdownMenuItem<String>(
                             value: null,
-                            child: Text('All Semesters', style: TextStyle(color: AppColors.subtleText)),
+                            child: Text('All Semesters',
+                                style: TextStyle(
+                                    color: AppColors.subtleText)),
                           ),
                           ...List.generate(8, (i) {
                             final sem = '${i + 1}';
@@ -118,7 +130,10 @@ class _MentorListScreenState extends State<MentorListScreen> {
                             );
                           }),
                         ],
-                        onChanged: (v) => setState(() => _semesterFilter = v),
+                        onChanged: (v) {
+                          setState(() => _semesterFilter = v);
+                          _applyFilters();
+                        },
                       ),
                     ),
                   ),
@@ -126,39 +141,51 @@ class _MentorListScreenState extends State<MentorListScreen> {
                   // Subject Dropdown
                   Expanded(
                     child: GlassCard(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 2),
                       margin: EdgeInsets.zero,
                       child: DropdownButtonFormField<String>(
                         value: _subjectFilter,
                         isExpanded: true,
                         dropdownColor: AppColors.cardBg,
-                        icon: const Icon(Icons.arrow_drop_down, color: AppColors.primaryGreen),
-                        style: const TextStyle(color: AppColors.white, fontSize: 14),
+                        icon: const Icon(Icons.arrow_drop_down,
+                            color: AppColors.primaryGreen),
+                        style: const TextStyle(
+                            color: AppColors.white, fontSize: 14),
                         decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.menu_book_rounded, size: 18, color: AppColors.primaryGreen),
+                          prefixIcon: Icon(Icons.menu_book_rounded,
+                              size: 18, color: AppColors.primaryGreen),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 12),
+                          contentPadding:
+                              EdgeInsets.symmetric(vertical: 12),
                           filled: false,
                         ),
                         hint: const Text(
                           'All Subjects',
-                          style: TextStyle(color: AppColors.subtleText, fontSize: 13),
+                          style: TextStyle(
+                              color: AppColors.subtleText, fontSize: 13),
                         ),
                         items: [
                           const DropdownMenuItem<String>(
                             value: null,
-                            child: Text('All Subjects', style: TextStyle(color: AppColors.subtleText)),
+                            child: Text('All Subjects',
+                                style: TextStyle(
+                                    color: AppColors.subtleText)),
                           ),
                           ..._cseSubjects.map((subject) {
                             return DropdownMenuItem<String>(
                               value: subject,
-                              child: Text(subject, overflow: TextOverflow.ellipsis),
+                              child: Text(subject,
+                                  overflow: TextOverflow.ellipsis),
                             );
                           }),
                         ],
-                        onChanged: (v) => setState(() => _subjectFilter = v),
+                        onChanged: (v) {
+                          setState(() => _subjectFilter = v);
+                          _applyFilters();
+                        },
                       ),
                     ),
                   ),
@@ -167,37 +194,73 @@ class _MentorListScreenState extends State<MentorListScreen> {
               const SizedBox(height: 20),
               // Mentor Grid
               Expanded(
-                child: _filteredMentors.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.search_off_rounded, size: 48, color: AppColors.subtleText),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'No mentors found',
-                              style: TextStyle(color: AppColors.subtleText),
+                child: mentorProvider.loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : mentors.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.search_off_rounded,
+                                    size: 48,
+                                    color: AppColors.subtleText),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'No mentors found',
+                                  style: TextStyle(
+                                      color: AppColors.subtleText),
+                                ),
+                                const SizedBox(height: 6),
+                                const Text(
+                                  'Be the first — tap "Become a Mentor" below',
+                                  style: TextStyle(
+                                      color: AppColors.subtleText,
+                                      fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      )
-                    : GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.85,
-                        ),
-                        itemCount: _filteredMentors.length,
-                        itemBuilder: (context, index) {
-                          final mentor = _filteredMentors[index];
-                          return _MentorCard(mentor: mentor)
-                              .animate()
-                              .fadeIn(delay: (200 + index * 100).ms)
-                              .scale(begin: const Offset(0.95, 0.95));
-                        },
-                      ),
+                          )
+                        : GridView.builder(
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 12,
+                              crossAxisSpacing: 12,
+                              childAspectRatio: 0.85,
+                            ),
+                            itemCount: mentors.length,
+                            itemBuilder: (context, index) {
+                              final currentUserId =
+                                  context.read<UserProvider>().user.id;
+                              final mentor = mentors[index];
+                              // Don't show yourself as a mentor
+                              if (mentor['id'] == currentUserId) {
+                                return const SizedBox.shrink();
+                              }
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => RequestSessionScreen(
+                                        mentorId: mentor['id'] as String,
+                                        mentorName: mentor['name'] as String,
+                                        mentorTopics: List<String>.from(
+                                            mentor['topics'] ?? []),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: _MentorCard(mentor: mentor)
+                                    .animate()
+                                    .fadeIn(
+                                        delay: (200 + index * 100).ms)
+                                    .scale(
+                                        begin: const Offset(0.95, 0.95)),
+                              );
+                            },
+                          ),
               ),
               // Opt-in FAB
               Padding(
@@ -214,7 +277,8 @@ class _MentorListScreenState extends State<MentorListScreen> {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.volunteer_activism_rounded, size: 20),
+                    icon: const Icon(Icons.volunteer_activism_rounded,
+                        size: 20),
                     label: const Text('Become a Mentor'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.tealAccent,
@@ -256,7 +320,7 @@ class _MentorCard extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                mentor['name'][0],
+                (mentor['name'] as String)[0],
                 style: const TextStyle(
                   color: AppColors.white,
                   fontWeight: FontWeight.w700,
@@ -267,7 +331,7 @@ class _MentorCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            mentor['name'],
+            mentor['name'] as String,
             style: const TextStyle(
               color: AppColors.white,
               fontWeight: FontWeight.w600,
@@ -290,7 +354,8 @@ class _MentorCard extends StatelessWidget {
           // Rating
           Row(
             children: [
-              const Icon(Icons.star_rounded, size: 14, color: AppColors.peach),
+              const Icon(Icons.star_rounded,
+                  size: 14, color: AppColors.peach),
               const SizedBox(width: 4),
               Text(
                 '${mentor['rating']}',
@@ -334,6 +399,25 @@ class _MentorCard extends StatelessWidget {
                       ),
                     ))
                 .toList(),
+          ),
+          const SizedBox(height: 8),
+          // Request button
+          SizedBox(
+            width: double.infinity,
+            height: 28,
+            child: ElevatedButton(
+              onPressed: null, // handled by parent GestureDetector
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.tealAccent.withValues(alpha: 0.2),
+                foregroundColor: AppColors.tealAccent,
+                padding: EdgeInsets.zero,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('Request Session',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
+            ),
           ),
         ],
       ),

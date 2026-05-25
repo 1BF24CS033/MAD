@@ -2,22 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
-import '../../providers/session_provider.dart';
-import '../../providers/project_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../widgets/topic_chip.dart';
 import '../../widgets/role_toggle.dart';
-import '../home/home_screen.dart';
 
 class TopicsInterestScreen extends StatefulWidget {
   final String name;
   final int semester;
+  final String email;
+  final String password;
 
   const TopicsInterestScreen({
     super.key,
     required this.name,
     required this.semester,
+    required this.email,
+    required this.password,
   });
 
   @override
@@ -38,8 +39,42 @@ class _TopicsInterestScreenState extends State<TopicsInterestScreen> {
     });
   }
 
+  Future<void> _finish() async {
+    final userProvider = context.read<UserProvider>();
+
+    try {
+      // Create the Supabase auth user and save the profile in one call
+      await userProvider.signUp(
+        email: widget.email,
+        password: widget.password,
+        name: widget.name,
+        semester: widget.semester,
+        topics: _selectedTopics,
+      );
+
+      if (_isMentor) {
+        await userProvider.toggleRole();
+        await userProvider.updateMentorTopics(_selectedTopics);
+      }
+
+      // Navigation is handled automatically by the Consumer in main.dart
+      // (onboardingComplete becomes true → _AppLoader → HomeScreen)
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final loading = context.watch<UserProvider>().loading;
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -81,7 +116,8 @@ class _TopicsInterestScreenState extends State<TopicsInterestScreen> {
                     isMentor: _isMentor,
                     onToggle: (val) => setState(() => _isMentor = val),
                   ),
-                ).animate().fadeIn(delay: 300.ms).scale(begin: const Offset(0.9, 0.9)),
+                ).animate().fadeIn(delay: 300.ms).scale(
+                    begin: const Offset(0.9, 0.9)),
                 const SizedBox(height: 8),
                 Center(
                   child: Text(
@@ -129,46 +165,32 @@ class _TopicsInterestScreenState extends State<TopicsInterestScreen> {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: _selectedTopics.isNotEmpty
-                        ? () async {
-                            final userProvider =
-                                context.read<UserProvider>();
-                            await userProvider.completeOnboarding(
-                              name: widget.name,
-                              semester: widget.semester,
-                              topics: _selectedTopics,
-                            );
-                            if (_isMentor) {
-                              userProvider.toggleRole();
-                              userProvider.updateMentorTopics(_selectedTopics);
-                            }
-                            // Load dummy data
-                            context.read<SessionProvider>().loadDummyData();
-                            context.read<ProjectProvider>().loadDummyData();
-
-                            if (!context.mounted) return;
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(
-                                builder: (_) => const HomeScreen(),
-                              ),
-                              (route) => false,
-                            );
-                          }
-                        : null,
+                    onPressed:
+                        _selectedTopics.isNotEmpty && !loading
+                            ? _finish
+                            : null,
                     style: ElevatedButton.styleFrom(
                       disabledBackgroundColor:
                           AppColors.primaryGreen.withValues(alpha: 0.2),
                       disabledForegroundColor:
                           AppColors.white.withValues(alpha: 0.3),
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Start Learning'),
-                        SizedBox(width: 8),
-                        Icon(Icons.rocket_launch_rounded, size: 20),
-                      ],
-                    ),
+                    child: loading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.white),
+                          )
+                        : const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Start Learning'),
+                              SizedBox(width: 8),
+                              Icon(Icons.rocket_launch_rounded, size: 20),
+                            ],
+                          ),
                   ),
                 ),
                 const SizedBox(height: 32),

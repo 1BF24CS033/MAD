@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/app_theme.dart';
 import 'semester_select_screen.dart';
+import 'sign_in_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -86,7 +87,7 @@ class WelcomeScreen extends StatelessWidget {
                   'Collaborate on real projects',
                 ).animate().fadeIn(delay: 700.ms).slideX(begin: -0.2),
                 const Spacer(flex: 2),
-                // CTA Button
+                // CTA Buttons
                 SizedBox(
                   width: double.infinity,
                   height: 56,
@@ -111,6 +112,20 @@ class WelcomeScreen extends StatelessWidget {
                     .animate()
                     .fadeIn(delay: 800.ms, duration: 600.ms)
                     .slideY(begin: 0.3),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const SignInScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Already have an account? Sign in',
+                    style: TextStyle(color: AppColors.subtleText),
+                  ),
+                ).animate().fadeIn(delay: 900.ms),
                 const SizedBox(height: 40),
               ],
             ),

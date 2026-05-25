@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../models/project_model.dart';
 import '../../providers/project_provider.dart';
+import '../../providers/user_provider.dart';
+import '../../services/supabase_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../widgets/glass_card.dart';
@@ -156,12 +158,16 @@ class _PostProjectScreenState extends State<PostProjectScreen> {
                   onPressed: _titleController.text.isNotEmpty &&
                           _selectedSkills.isNotEmpty
                       ? () {
+                          final user =
+                              context.read<UserProvider>().user;
                           context.read<ProjectProvider>().addProject(
                                 ProjectModel(
-                                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                  id: '', // assigned by Supabase
                                   title: _titleController.text,
                                   description: _descController.text,
-                                  postedBy: 'You',
+                                  postedBy: user.name,
+                                  postedById:
+                                      SupabaseService.currentUserId ?? '',
                                   skillsRequired: _selectedSkills,
                                   teamSize: _teamSize,
                                   postedDate: DateTime.now(),

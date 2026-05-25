@@ -107,21 +107,40 @@ class ProjectBoardScreen extends StatelessWidget {
                         itemBuilder: (context, index) {
                           return ProjectCard(
                             project: projects[index],
-                            onJoin: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Joined "${projects[index].title}" 🎉',
-                                    style: const TextStyle(
-                                        color: AppColors.white),
-                                  ),
-                                  backgroundColor: AppColors.primaryGreen,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              );
+                            onJoin: () async {
+                              try {
+                                await projectProvider
+                                    .joinProject(projects[index].id);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Joined "${projects[index].title}" 🎉',
+                                        style: const TextStyle(
+                                            color: AppColors.white),
+                                      ),
+                                      backgroundColor: AppColors.primaryGreen,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          e.toString().contains('already')
+                                              ? 'You already joined this project'
+                                              : 'Could not join: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
                             },
                           )
                               .animate()
