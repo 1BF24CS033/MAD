@@ -13,7 +13,7 @@ class SemesterSelectScreen extends StatefulWidget {
 
 class _SemesterSelectScreenState extends State<SemesterSelectScreen> {
   int? _selectedSemester;
-  final _nameController = TextEditingController(text: 'Student');
+  final _nameController = TextEditingController(text: 'Student Name');
 
   @override
   void dispose() {
