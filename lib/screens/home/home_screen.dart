@@ -10,6 +10,9 @@ import '../../widgets/role_toggle.dart';
 import '../../widgets/search_bar_widget.dart';
 import '../../widgets/session_tile.dart';
 import '../mentorship/mentor_list_screen.dart';
+import '../projects/project_board_screen.dart';
+import '../rewards/rewards_store_screen.dart';
+import '../about/about_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,6 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final screens = [
       const _DashboardView(),
       const MentorListScreen(),
+      const ProjectBoardScreen(),
+      const RewardsStoreScreen(),
+      const AboutScreen(),
     ];
 
     return Scaffold(
@@ -52,6 +58,18 @@ class _HomeScreenState extends State<HomeScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.psychology_rounded),
               label: 'Mentors',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.rocket_launch_rounded),
+              label: 'Projects',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.stars_rounded),
+              label: 'Rewards',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.info_outline_rounded),
+              label: 'About',
             ),
           ],
         ),
