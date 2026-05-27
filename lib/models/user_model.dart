@@ -1,6 +1,7 @@
 class UserModel {
   final String id; // Supabase auth UUID
   String name;
+  String email;
   String college;
   int semester;
   List<String> topicsOfInterest;
@@ -13,6 +14,7 @@ class UserModel {
   UserModel({
     this.id = '',
     this.name = 'Student',
+    this.email = '',
     this.college = 'BMS College of Engineering',
     this.semester = 1,
     this.topicsOfInterest = const [],
@@ -27,6 +29,7 @@ class UserModel {
     return UserModel(
       id: json['id'] as String? ?? '',
       name: json['name'] as String? ?? 'Student',
+      email: json['email'] as String? ?? '',
       college: json['college'] as String? ?? 'BMS College of Engineering',
       semester: json['semester'] as int? ?? 1,
       topicsOfInterest: List<String>.from(json['topics_of_interest'] ?? []),
@@ -40,6 +43,7 @@ class UserModel {
 
   Map<String, dynamic> toJson() => {
         'name': name,
+        'email': email,
         'college': college,
         'semester': semester,
         'topics_of_interest': topicsOfInterest,
@@ -53,6 +57,7 @@ class UserModel {
   UserModel copyWith({
     String? id,
     String? name,
+    String? email,
     String? college,
     int? semester,
     List<String>? topicsOfInterest,
@@ -65,6 +70,7 @@ class UserModel {
     return UserModel(
       id: id ?? this.id,
       name: name ?? this.name,
+      email: email ?? this.email,
       college: college ?? this.college,
       semester: semester ?? this.semester,
       topicsOfInterest: topicsOfInterest ?? this.topicsOfInterest,

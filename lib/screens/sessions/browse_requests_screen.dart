@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/help_request_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../models/help_request.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../widgets/glass_card.dart';
@@ -130,16 +132,18 @@ class BrowseRequestsScreen extends StatelessWidget {
                               return _RequestCard(
                                 request: req,
                                 onAccept: () async {
-                                  await provider.acceptRequest(req.id);
+                                  final meetLink = await provider.acceptRequest(req.id);
                                   // Award points to mentor
                                   await userProvider.addMentorPoints(
                                       AppConstants.pointsPerSession);
                                   if (context.mounted) {
+                                    final message = meetLink != null
+                                        ? 'Accepted! Meet link created ✓'
+                                        : 'You accepted ${req.learnerName}\'s request! +${AppConstants.pointsPerSession} pts';
                                     ScaffoldMessenger.of(context)
                                         .showSnackBar(
                                       SnackBar(
-                                        content: Text(
-                                            'You accepted ${req.learnerName}\'s request! +${AppConstants.pointsPerSession} pts'),
+                                        content: Text(message),
                                         backgroundColor:
                                             AppColors.primaryGreen,
                                         behavior:
@@ -148,6 +152,16 @@ class BrowseRequestsScreen extends StatelessWidget {
                                             borderRadius:
                                                 BorderRadius.circular(
                                                     12)),
+                                        action: meetLink != null
+                                            ? SnackBarAction(
+                                                label: 'Copy Link',
+                                                textColor: AppColors.white,
+                                                onPressed: () {
+                                                  Clipboard.setData(
+                                                      ClipboardData(text: meetLink));
+                                                },
+                                              )
+                                            : null,
                                       ),
                                     );
                                   }
@@ -168,7 +182,7 @@ class BrowseRequestsScreen extends StatelessWidget {
 }
 
 class _RequestCard extends StatelessWidget {
-  final request;
+  final HelpRequest request;
   final VoidCallback onAccept;
 
   const _RequestCard({required this.request, required this.onAccept});
@@ -204,6 +218,30 @@ class _RequestCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
+              // Meet badge
+              if (request.wantsMeet)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 6, vertical: 3),
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.sage.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.videocam_rounded,
+                          size: 12, color: AppColors.sage),
+                      SizedBox(width: 3),
+                      Text('Meet',
+                          style: TextStyle(
+                              color: AppColors.sage,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
               Text(
                 '${request.durationMinutes} min',
                 style: const TextStyle(
@@ -224,7 +262,7 @@ class _RequestCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 8),
-          // Learner name + time
+          // Learner name + semester + time
           Row(
             children: [
               const Icon(Icons.person_outline,
@@ -234,6 +272,24 @@ class _RequestCard extends StatelessWidget {
                 request.learnerName,
                 style: const TextStyle(
                     color: AppColors.subtleText, fontSize: 12),
+              ),
+              const SizedBox(width: 8),
+              // Semester badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.peach.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'Sem ${request.learnerSemester}',
+                  style: const TextStyle(
+                    color: AppColors.peach,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
               const Spacer(),
               Text(

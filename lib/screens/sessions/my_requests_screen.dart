@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/help_request_provider.dart';
+import '../../models/help_request.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_card.dart';
 import 'post_help_request_screen.dart';
+import 'review_screen.dart';
 
 class MyRequestsScreen extends StatelessWidget {
   const MyRequestsScreen({super.key});
@@ -12,7 +16,7 @@ class MyRequestsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<HelpRequestProvider>();
-    final requests = provider.myRequests;
+    final requests = provider.myHelpRequests;
 
     return Scaffold(
       appBar: AppBar(
@@ -103,6 +107,42 @@ class MyRequestsScreen extends StatelessWidget {
                                   }
                                 }
                               : null,
+                          onShareEmail: req.isAccepted && !req.emailShared
+                              ? () async {
+                                  await provider.shareEmail(req.id);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                            'Email shared with your mentor'),
+                                        backgroundColor:
+                                            AppColors.primaryGreen,
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
+                          onConfirmComplete: req.isPendingReview
+                              ? () async {
+                                  await provider.confirmComplete(req.id);
+                                  if (context.mounted) {
+                                    // Navigate to review screen
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => ReviewScreen(
+                                          requestId: req.id,
+                                          mentorId: req.mentorId!,
+                                          mentorName:
+                                              req.mentorName ?? 'Mentor',
+                                          topic: req.topic,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
                         )
                             .animate()
                             .fadeIn(delay: (index * 80).ms)
@@ -116,10 +156,17 @@ class MyRequestsScreen extends StatelessWidget {
 }
 
 class _MyRequestCard extends StatelessWidget {
-  final request;
+  final HelpRequest request;
   final VoidCallback? onCancel;
+  final VoidCallback? onShareEmail;
+  final VoidCallback? onConfirmComplete;
 
-  const _MyRequestCard({required this.request, this.onCancel});
+  const _MyRequestCard({
+    required this.request,
+    this.onCancel,
+    this.onShareEmail,
+    this.onConfirmComplete,
+  });
 
   Color get _statusColor {
     switch (request.status) {
@@ -127,10 +174,21 @@ class _MyRequestCard extends StatelessWidget {
         return AppColors.tealAccent;
       case 'accepted':
         return AppColors.primaryGreen;
+      case 'pending_review':
+        return AppColors.peach;
       case 'completed':
         return AppColors.sage;
       default:
         return AppColors.subtleText;
+    }
+  }
+
+  String get _statusText {
+    switch (request.status) {
+      case 'pending_review':
+        return 'AWAITING YOUR REVIEW';
+      default:
+        return request.status.toUpperCase();
     }
   }
 
@@ -152,7 +210,7 @@ class _MyRequestCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  request.status.toUpperCase(),
+                  _statusText,
                   style: TextStyle(
                     color: _statusColor,
                     fontSize: 10,
@@ -192,6 +250,23 @@ class _MyRequestCard extends StatelessWidget {
               ],
             ),
           ],
+          // Email shared / Meet link section
+          if (request.isAccepted || request.isPendingReview || request.isCompleted) ...[
+            const SizedBox(height: 8),
+            if (request.emailShared && request.mentorEmail != null)
+              _ContactRow(
+                icon: Icons.email_outlined,
+                label: 'Mentor: ${request.mentorEmail}',
+                email: request.mentorEmail!,
+              ),
+            if (request.meetLink != null)
+              _ContactRow(
+                icon: Icons.videocam_rounded,
+                label: 'Google Meet link',
+                email: request.meetLink!,
+                isMeetLink: true,
+              ),
+          ],
           const SizedBox(height: 8),
           Row(
             children: [
@@ -200,6 +275,11 @@ class _MyRequestCard extends StatelessWidget {
                 style: const TextStyle(
                     color: AppColors.subtleText, fontSize: 12),
               ),
+              if (request.wantsMeet) ...[
+                const SizedBox(width: 8),
+                const Icon(Icons.videocam_rounded,
+                    size: 14, color: AppColors.sage),
+              ],
               const Spacer(),
               if (onCancel != null)
                 TextButton(
@@ -210,7 +290,142 @@ class _MyRequestCard extends StatelessWidget {
                 ),
             ],
           ),
+          // Action buttons
+          if (onShareEmail != null) ...[
+            const Divider(color: AppColors.glassBorder, height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: OutlinedButton.icon(
+                onPressed: onShareEmail,
+                icon: const Icon(Icons.mail_outline_rounded, size: 16),
+                label: const Text('Share My Email with Mentor'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.tealAccent,
+                  side: BorderSide(
+                      color: AppColors.tealAccent.withValues(alpha: 0.4)),
+                ),
+              ),
+            ),
+          ],
+          if (onConfirmComplete != null) ...[
+            const Divider(color: AppColors.glassBorder, height: 20),
+            const Text(
+              'Your mentor marked this as done. Please confirm:',
+              style: TextStyle(color: AppColors.subtleText, fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton.icon(
+                onPressed: onConfirmComplete,
+                icon: const Icon(Icons.check_circle_outline, size: 18),
+                label: const Text('Confirm & Leave Review'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen,
+                ),
+              ),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _ContactRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String email;
+  final bool isMeetLink;
+
+  const _ContactRow({
+    required this.icon,
+    required this.label,
+    required this.email,
+    this.isMeetLink = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        if (isMeetLink) {
+          // Open Meet link in browser
+          final uri = Uri.tryParse(email);
+          if (uri != null && await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } else {
+            // Fallback: copy to clipboard
+            Clipboard.setData(ClipboardData(text: email));
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Meet link copied!'),
+                  behavior: SnackBarBehavior.floating,
+                  duration: Duration(seconds: 1),
+                ),
+              );
+            }
+          }
+        } else {
+          Clipboard.setData(ClipboardData(text: email));
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Email copied!'),
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          }
+        }
+      },
+      onLongPress: () {
+        Clipboard.setData(ClipboardData(text: email));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isMeetLink ? 'Meet link copied!' : 'Email copied!'),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isMeetLink
+              ? AppColors.sage.withValues(alpha: 0.1)
+              : AppColors.tealAccent.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(icon,
+                size: 14,
+                color:
+                    isMeetLink ? AppColors.sage : AppColors.tealAccent),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                    color: isMeetLink
+                        ? AppColors.sage
+                        : AppColors.tealAccent,
+                    fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Icon(
+                isMeetLink
+                    ? Icons.open_in_new_rounded
+                    : Icons.copy_rounded,
+                size: 14,
+                color: AppColors.subtleText),
+          ],
+        ),
       ),
     );
   }

@@ -7,19 +7,18 @@ import '../../utils/constants.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/topic_chip.dart';
 
-class PostHelpRequestScreen extends StatefulWidget {
-  const PostHelpRequestScreen({super.key});
+class CreateGroupStudyScreen extends StatefulWidget {
+  const CreateGroupStudyScreen({super.key});
 
   @override
-  State<PostHelpRequestScreen> createState() =>
-      _PostHelpRequestScreenState();
+  State<CreateGroupStudyScreen> createState() =>
+      _CreateGroupStudyScreenState();
 }
 
-class _PostHelpRequestScreenState extends State<PostHelpRequestScreen> {
+class _CreateGroupStudyScreenState extends State<CreateGroupStudyScreen> {
   final _descController = TextEditingController();
   String? _selectedTopic;
-  int _duration = 30;
-  bool _wantsMeet = false;
+  int _maxParticipants = 5;
   bool _loading = false;
 
   @override
@@ -32,25 +31,24 @@ class _PostHelpRequestScreenState extends State<PostHelpRequestScreen> {
     if (_selectedTopic == null) return;
     if (_descController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please describe your doubt')),
+        const SnackBar(content: Text('Please describe what you\'ll be studying')),
       );
       return;
     }
 
     setState(() => _loading = true);
     try {
-      await context.read<HelpRequestProvider>().postRequest(
+      await context.read<HelpRequestProvider>().postGroupStudy(
             topic: _selectedTopic!,
             description: _descController.text.trim(),
-            durationMinutes: _duration,
-            wantsMeet: _wantsMeet,
+            maxParticipants: _maxParticipants,
           );
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Help request posted! A mentor will accept it soon.'),
+            content: const Text('Group study created! Others can join now.'),
             backgroundColor: AppColors.primaryGreen,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -62,7 +60,7 @@ class _PostHelpRequestScreenState extends State<PostHelpRequestScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Failed to post: $e'),
+              content: Text('Failed to create: $e'),
               backgroundColor: Colors.red),
         );
       }
@@ -75,7 +73,7 @@ class _PostHelpRequestScreenState extends State<PostHelpRequestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Post a Help Request'),
+        title: const Text('Create Group Study'),
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back_rounded),
@@ -87,7 +85,7 @@ class _PostHelpRequestScreenState extends State<PostHelpRequestScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppColors.sage.withValues(alpha: 0.05),
+              AppColors.sage.withValues(alpha: 0.06),
               AppColors.scaffoldBg,
             ],
           ),
@@ -101,18 +99,20 @@ class _PostHelpRequestScreenState extends State<PostHelpRequestScreen> {
                 const SizedBox(height: 24),
                 // Info banner
                 GlassCard(
-                  borderColor: AppColors.tealAccent.withValues(alpha: 0.3),
+                  borderColor: AppColors.sage.withValues(alpha: 0.3),
                   padding: const EdgeInsets.all(14),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline_rounded,
-                          color: AppColors.tealAccent, size: 20),
+                      const Icon(Icons.groups_rounded,
+                          color: AppColors.sage, size: 20),
                       const SizedBox(width: 12),
                       const Expanded(
                         child: Text(
-                          'Post your doubt and a mentor will accept your request to help you.',
+                          'Create a group study session. Interested students can join and study together.',
                           style: TextStyle(
-                              color: AppColors.subtleText, fontSize: 12, height: 1.4),
+                              color: AppColors.subtleText,
+                              fontSize: 12,
+                              height: 1.4),
                         ),
                       ),
                     ],
@@ -120,10 +120,11 @@ class _PostHelpRequestScreenState extends State<PostHelpRequestScreen> {
                 ).animate().fadeIn(duration: 300.ms),
                 const SizedBox(height: 24),
 
-                // Topic selection
-                Text('What subject do you need help with?',
-                    style: Theme.of(context).textTheme.titleMedium)
-                    .animate().fadeIn(delay: 100.ms),
+                // Topic
+                Text('What are you studying?',
+                        style: Theme.of(context).textTheme.titleMedium)
+                    .animate()
+                    .fadeIn(delay: 100.ms),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,
@@ -132,16 +133,18 @@ class _PostHelpRequestScreenState extends State<PostHelpRequestScreen> {
                     return TopicChip(
                       label: topic,
                       isSelected: _selectedTopic == topic,
-                      onTap: () => setState(() => _selectedTopic = topic),
+                      onTap: () =>
+                          setState(() => _selectedTopic = topic),
                     );
                   }).toList(),
                 ).animate().fadeIn(delay: 150.ms),
                 const SizedBox(height: 24),
 
                 // Description
-                Text('Describe your doubt',
-                    style: Theme.of(context).textTheme.titleMedium)
-                    .animate().fadeIn(delay: 200.ms),
+                Text('What\'s the plan?',
+                        style: Theme.of(context).textTheme.titleMedium)
+                    .animate()
+                    .fadeIn(delay: 200.ms),
                 const SizedBox(height: 10),
                 GlassCard(
                   padding: const EdgeInsets.symmetric(
@@ -152,13 +155,13 @@ class _PostHelpRequestScreenState extends State<PostHelpRequestScreen> {
                     style: const TextStyle(color: AppColors.white),
                     decoration: const InputDecoration(
                       hintText:
-                          'e.g. I don\'t understand how recursion works in trees...',
+                          'e.g. Revising linked lists and trees for the mid-sem exam...',
                       hintStyle: TextStyle(
                           color: AppColors.subtleText, fontSize: 13),
                       prefixIcon: Padding(
                         padding: EdgeInsets.only(bottom: 60),
                         child: Icon(Icons.edit_note_rounded,
-                            color: AppColors.primaryGreen),
+                            color: AppColors.sage),
                       ),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
@@ -166,92 +169,50 @@ class _PostHelpRequestScreenState extends State<PostHelpRequestScreen> {
                     ),
                   ),
                 ).animate().fadeIn(delay: 250.ms),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
-                // Duration
-                Text('How long do you need?',
-                    style: Theme.of(context).textTheme.titleMedium)
-                    .animate().fadeIn(delay: 300.ms),
+                // Max participants
+                Text('Max participants',
+                        style: Theme.of(context).textTheme.titleMedium)
+                    .animate()
+                    .fadeIn(delay: 300.ms),
                 const SizedBox(height: 10),
                 GlassCard(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                        onPressed: _duration > 15
-                            ? () => setState(() => _duration -= 15)
+                        onPressed: _maxParticipants > 2
+                            ? () => setState(
+                                () => _maxParticipants--)
                             : null,
                         icon: const Icon(Icons.remove_circle_outline),
-                        color: AppColors.primaryGreen,
+                        color: AppColors.sage,
                       ),
-                      Text(
-                        '$_duration min',
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
+                      SizedBox(
+                        width: 60,
+                        child: Center(
+                          child: Text(
+                            '$_maxParticipants',
+                            style: const TextStyle(
+                              color: AppColors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ),
                       IconButton(
-                        onPressed: _duration < 120
-                            ? () => setState(() => _duration += 15)
+                        onPressed: _maxParticipants < 20
+                            ? () => setState(
+                                () => _maxParticipants++)
                             : null,
                         icon: const Icon(Icons.add_circle_outline),
-                        color: AppColors.primaryGreen,
+                        color: AppColors.sage,
                       ),
                     ],
                   ),
                 ).animate().fadeIn(delay: 350.ms),
-                const SizedBox(height: 20),
-
-                // Google Meet toggle
-                GlassCard(
-                  borderColor: _wantsMeet
-                      ? AppColors.sage.withValues(alpha: 0.4)
-                      : null,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: AppColors.sage.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.videocam_rounded,
-                            color: AppColors.sage, size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Schedule Google Meet',
-                              style: TextStyle(
-                                color: AppColors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const Text(
-                              'Auto-generate a Meet link when accepted',
-                              style: TextStyle(
-                                  color: AppColors.subtleText,
-                                  fontSize: 11),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Switch(
-                        value: _wantsMeet,
-                        onChanged: (v) =>
-                            setState(() => _wantsMeet = v),
-                        activeColor: AppColors.sage,
-                      ),
-                    ],
-                  ),
-                ).animate().fadeIn(delay: 400.ms),
                 const SizedBox(height: 32),
 
                 SizedBox(
@@ -268,15 +229,15 @@ class _PostHelpRequestScreenState extends State<PostHelpRequestScreen> {
                             child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 color: AppColors.white))
-                        : const Icon(Icons.send_rounded, size: 18),
-                    label: const Text('Post Help Request'),
+                        : const Icon(Icons.groups_rounded, size: 18),
+                    label: const Text('Create Group Study'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGreen,
+                      backgroundColor: AppColors.sage,
                       disabledBackgroundColor:
-                          AppColors.primaryGreen.withValues(alpha: 0.2),
+                          AppColors.sage.withValues(alpha: 0.2),
                     ),
                   ),
-                ).animate().fadeIn(delay: 450.ms),
+                ).animate().fadeIn(delay: 400.ms),
                 const SizedBox(height: 32),
               ],
             ),

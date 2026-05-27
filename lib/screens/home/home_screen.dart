@@ -13,6 +13,7 @@ import '../mentorship/mentor_list_screen.dart';
 import '../projects/project_board_screen.dart';
 import '../rewards/rewards_store_screen.dart';
 import '../sessions/browse_requests_screen.dart';
+import '../sessions/browse_group_studies_screen.dart';
 import '../sessions/my_requests_screen.dart';
 import '../about/about_screen.dart';
 
@@ -26,10 +27,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
+  void _navigateTo(int index) {
+    setState(() => _currentIndex = index);
+  }
+
   @override
   Widget build(BuildContext context) {
     final screens = [
-      const _DashboardView(),
+      _DashboardView(onNavigate: _navigateTo),
       const MentorListScreen(),
       const ProjectBoardScreen(),
       const RewardsStoreScreen(),
@@ -81,7 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _DashboardView extends StatelessWidget {
-  const _DashboardView();
+  final void Function(int) onNavigate;
+
+  const _DashboardView({required this.onNavigate});
 
   @override
   Widget build(BuildContext context) {
@@ -232,13 +239,7 @@ class _DashboardView extends StatelessWidget {
                       subtitle: 'Find teammates',
                       icon: Icons.rocket_launch_rounded,
                       color: AppColors.sage,
-                      onTap: () {
-                        context
-                            .findAncestorStateOfType<_HomeScreenState>()
-                            ?.setState(() => context
-                                .findAncestorStateOfType<_HomeScreenState>()!
-                                ._currentIndex = 2);
-                      },
+                      onTap: () => onNavigate(2),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -248,17 +249,41 @@ class _DashboardView extends StatelessWidget {
                       subtitle: 'Redeem your points',
                       icon: Icons.stars_rounded,
                       color: AppColors.primaryGreen,
-                      onTap: () {
-                        context
-                            .findAncestorStateOfType<_HomeScreenState>()
-                            ?.setState(() => context
-                                .findAncestorStateOfType<_HomeScreenState>()!
-                                ._currentIndex = 3);
-                      },
+                      onTap: () => onNavigate(3),
                     ),
                   ),
                 ],
               ).animate().fadeIn(delay: 380.ms).slideY(begin: 0.15),
+              const SizedBox(height: 12),
+
+              // Row 3: Group Study
+              Row(
+                children: [
+                  Expanded(
+                    child: _QuickActionCard(
+                      title: 'Group\nStudy',
+                      subtitle: 'Study together',
+                      icon: Icons.groups_rounded,
+                      color: AppColors.tealAccent,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const BrowseGroupStudiesScreen()),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _QuickActionCard(
+                      title: 'Find\nMentors',
+                      subtitle: 'Browse mentors',
+                      icon: Icons.psychology_rounded,
+                      color: AppColors.peach,
+                      onTap: () => onNavigate(1),
+                    ),
+                  ),
+                ],
+              ).animate().fadeIn(delay: 440.ms).slideY(begin: 0.15),
 
               const SizedBox(height: 28),
 

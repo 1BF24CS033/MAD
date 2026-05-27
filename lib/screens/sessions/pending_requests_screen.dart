@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/session_provider.dart';
+import '../../models/peer_work_session.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
@@ -103,6 +104,7 @@ class PendingRequestsScreen extends StatelessWidget {
                             return _AcceptedCard(
                               session: s,
                               onComplete: () async {
+                                // Mark as pending review — learner must confirm
                                 await sessionProvider.completeSession(
                                     s.id, AppConstants.pointsPerSession);
                                 await userProvider.addMentorPoints(
@@ -133,7 +135,7 @@ class PendingRequestsScreen extends StatelessWidget {
 }
 
 class _RequestCard extends StatelessWidget {
-  final session;
+  final PeerWorkSession session;
   final VoidCallback onAccept;
   final VoidCallback onDecline;
 
@@ -221,7 +223,7 @@ class _RequestCard extends StatelessWidget {
 }
 
 class _AcceptedCard extends StatelessWidget {
-  final session;
+  final PeerWorkSession session;
   final VoidCallback onComplete;
 
   const _AcceptedCard({required this.session, required this.onComplete});
