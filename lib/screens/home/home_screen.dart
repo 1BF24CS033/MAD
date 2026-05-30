@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/session_provider.dart';
 import '../../providers/help_request_provider.dart';
+import '../../providers/reminder_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/mentor_points_badge.dart';
@@ -15,7 +16,10 @@ import '../rewards/rewards_store_screen.dart';
 import '../sessions/browse_requests_screen.dart';
 import '../sessions/browse_group_studies_screen.dart';
 import '../sessions/my_requests_screen.dart';
+import '../reminders/reminders_screen.dart';
 import '../about/about_screen.dart';
+
+// ── HomeScreen ─────────────────────────────────────────────────────────────
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,9 +31,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  void _navigateTo(int index) {
-    setState(() => _currentIndex = index);
-  }
+  void _navigateTo(int index) => setState(() => _currentIndex = index);
 
   @override
   Widget build(BuildContext context) {
@@ -50,8 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           border: Border(
             top: BorderSide(
-              color: AppColors.glassBorder.withValues(alpha: 0.5),
-            ),
+                color: AppColors.glassBorder.withValues(alpha: 0.5)),
           ),
         ),
         child: BottomNavigationBar(
@@ -59,25 +60,15 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: (i) => setState(() => _currentIndex = i),
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_rounded),
-              label: 'Home',
-            ),
+                icon: Icon(Icons.dashboard_rounded), label: 'Home'),
             BottomNavigationBarItem(
-              icon: Icon(Icons.psychology_rounded),
-              label: 'Mentors',
-            ),
+                icon: Icon(Icons.psychology_rounded), label: 'Mentors'),
             BottomNavigationBarItem(
-              icon: Icon(Icons.rocket_launch_rounded),
-              label: 'Projects',
-            ),
+                icon: Icon(Icons.rocket_launch_rounded), label: 'Projects'),
             BottomNavigationBarItem(
-              icon: Icon(Icons.stars_rounded),
-              label: 'Rewards',
-            ),
+                icon: Icon(Icons.stars_rounded), label: 'Rewards'),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline_rounded),
-              label: 'Profile',
-            ),
+                icon: Icon(Icons.person_outline_rounded), label: 'Profile'),
           ],
         ),
       ),
@@ -85,9 +76,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+// ── Dashboard ──────────────────────────────────────────────────────────────
+
 class _DashboardView extends StatelessWidget {
   final void Function(int) onNavigate;
-
   const _DashboardView({required this.onNavigate});
 
   @override
@@ -95,13 +87,13 @@ class _DashboardView extends StatelessWidget {
     final userProvider = context.watch<UserProvider>();
     final sessionProvider = context.watch<SessionProvider>();
     final helpProvider = context.watch<HelpRequestProvider>();
+    final reminderProvider = context.watch<ReminderProvider>();
     final user = userProvider.user;
 
-    // Open requests that mentors can accept
     final openRequestCount = helpProvider.openRequests.length;
-    // Learner's own pending requests
     final myPendingCount =
         helpProvider.myRequests.where((r) => r.isOpen).length;
+    final upcomingReminders = reminderProvider.upcoming.length;
 
     return Container(
       decoration: BoxDecoration(
@@ -122,18 +114,21 @@ class _DashboardView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              // Profile Card
+
+              // ── Profile card ─────────────────────────────────────────────
               GlassCard(
                 borderColor: AppColors.primaryGreen.withValues(alpha: 0.3),
                 child: Row(
                   children: [
+                    // Avatar
                     Container(
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [AppColors.primaryGreen, AppColors.tealAccent],
-                        ),
+                        gradient: LinearGradient(colors: [
+                          AppColors.primaryGreen,
+                          AppColors.tealAccent
+                        ]),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Center(
@@ -142,42 +137,85 @@ class _DashboardView extends StatelessWidget {
                               ? user.name[0].toUpperCase()
                               : 'S',
                           style: const TextStyle(
-                            color: AppColors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                          ),
+                              color: AppColors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
                     const SizedBox(width: 14),
+                    // Name + college
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            user.name,
-                            style: const TextStyle(
-                              color: AppColors.white,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                          Text(user.name,
+                              style: const TextStyle(
+                                  color: AppColors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700)),
                           const SizedBox(height: 3),
-                          Text(
-                            'BMSCE · Sem ${user.semester}',
-                            style: const TextStyle(
-                              color: AppColors.subtleText,
-                              fontSize: 12,
-                            ),
-                          ),
+                          Text('BMSCE · Sem ${user.semester}',
+                              style: const TextStyle(
+                                  color: AppColors.subtleText,
+                                  fontSize: 12)),
                         ],
                       ),
                     ),
-                    MentorPointsBadge(points: user.mentorPoints, compact: true),
+                    // Points badge
+                    MentorPointsBadge(
+                        points: user.mentorPoints, compact: true),
+                    const SizedBox(width: 8),
+                    // Reminders bell
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const RemindersScreen()),
+                          ),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color:
+                                  AppColors.peach.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.alarm_rounded,
+                                color: AppColors.peach, size: 18),
+                          ),
+                        ),
+                        if (upcomingReminders > 0)
+                          Positioned(
+                            top: -4,
+                            right: -4,
+                            child: Container(
+                              width: 16,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: AppColors.peach,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Text('$upcomingReminders',
+                                    style: const TextStyle(
+                                        color: AppColors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700)),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
+
               const SizedBox(height: 6),
+
               // Role toggle
               Center(
                 child: RoleToggle(
@@ -185,16 +223,17 @@ class _DashboardView extends StatelessWidget {
                   onToggle: (_) => userProvider.toggleRole(),
                 ),
               ).animate().fadeIn(delay: 200.ms),
+
               const SizedBox(height: 22),
 
-              // ── Quick Actions ──────────────────────────────────────────────
+              // ── Quick Actions ─────────────────────────────────────────────
               Text('Quick Actions',
                       style: Theme.of(context).textTheme.titleLarge)
                   .animate()
                   .fadeIn(delay: 250.ms),
               const SizedBox(height: 12),
 
-              // Row 1: Learner actions
+              // Row 1 — session actions
               Row(
                 children: [
                   Expanded(
@@ -204,11 +243,9 @@ class _DashboardView extends StatelessWidget {
                       icon: Icons.help_outline_rounded,
                       color: AppColors.tealAccent,
                       badge: myPendingCount,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const MyRequestsScreen()),
-                      ),
+                      onTap: () => Navigator.push(context,
+                          MaterialPageRoute(
+                              builder: (_) => const MyRequestsScreen())),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -219,18 +256,17 @@ class _DashboardView extends StatelessWidget {
                       icon: Icons.volunteer_activism_rounded,
                       color: AppColors.peach,
                       badge: openRequestCount,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const BrowseRequestsScreen()),
-                      ),
+                      onTap: () => Navigator.push(context,
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  const BrowseRequestsScreen())),
                     ),
                   ),
                 ],
               ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.15),
               const SizedBox(height: 12),
 
-              // Row 2: Navigation shortcuts
+              // Row 2 — navigation shortcuts
               Row(
                 children: [
                   Expanded(
@@ -253,10 +289,10 @@ class _DashboardView extends StatelessWidget {
                     ),
                   ),
                 ],
-              ).animate().fadeIn(delay: 380.ms).slideY(begin: 0.15),
+              ).animate().fadeIn(delay: 360.ms).slideY(begin: 0.15),
               const SizedBox(height: 12),
 
-              // Row 3: Group Study
+              // Row 3 — group study + reminders
               Row(
                 children: [
                   Expanded(
@@ -265,46 +301,47 @@ class _DashboardView extends StatelessWidget {
                       subtitle: 'Study together',
                       icon: Icons.groups_rounded,
                       color: AppColors.tealAccent,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const BrowseGroupStudiesScreen()),
-                      ),
+                      onTap: () => Navigator.push(context,
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  const BrowseGroupStudiesScreen())),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _QuickActionCard(
-                      title: 'Find\nMentors',
-                      subtitle: 'Browse mentors',
-                      icon: Icons.psychology_rounded,
+                      title: 'Reminders',
+                      subtitle: 'Manage your alerts',
+                      icon: Icons.alarm_rounded,
                       color: AppColors.peach,
-                      onTap: () => onNavigate(1),
+                      badge: upcomingReminders,
+                      onTap: () => Navigator.push(context,
+                          MaterialPageRoute(
+                              builder: (_) => const RemindersScreen())),
                     ),
                   ),
                 ],
-              ).animate().fadeIn(delay: 440.ms).slideY(begin: 0.15),
+              ).animate().fadeIn(delay: 420.ms).slideY(begin: 0.15),
 
               const SizedBox(height: 28),
 
-              // ── My Help Requests preview ───────────────────────────────────
+              // ── My Help Requests preview ──────────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('My Help Requests',
                       style: Theme.of(context).textTheme.titleLarge),
                   TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const MyRequestsScreen()),
-                    ),
+                    onPressed: () => Navigator.push(context,
+                        MaterialPageRoute(
+                            builder: (_) => const MyRequestsScreen())),
                     child: const Text('See all',
                         style: TextStyle(color: AppColors.tealAccent)),
                   ),
                 ],
-              ).animate().fadeIn(delay: 420.ms),
+              ).animate().fadeIn(delay: 450.ms),
               const SizedBox(height: 8),
+
               if (helpProvider.myRequests.isEmpty)
                 GlassCard(
                   child: Padding(
@@ -315,16 +352,13 @@ class _DashboardView extends StatelessWidget {
                             size: 36, color: AppColors.subtleText),
                         const SizedBox(height: 8),
                         const Text('No requests yet',
-                            style:
-                                TextStyle(color: AppColors.subtleText)),
+                            style: TextStyle(color: AppColors.subtleText)),
                         const SizedBox(height: 10),
                         ElevatedButton.icon(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                    const MyRequestsScreen()),
-                          ),
+                          onPressed: () => Navigator.push(context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      const MyRequestsScreen())),
                           icon: const Icon(Icons.add_rounded, size: 16),
                           label: const Text('Post a Help Request'),
                           style: ElevatedButton.styleFrom(
@@ -333,7 +367,7 @@ class _DashboardView extends StatelessWidget {
                       ],
                     ),
                   ),
-                ).animate().fadeIn(delay: 450.ms)
+                ).animate().fadeIn(delay: 470.ms)
               else
                 ...helpProvider.myRequests.take(2).map((req) {
                   final statusColor = req.isOpen
@@ -372,22 +406,20 @@ class _DashboardView extends StatelessWidget {
                             color: statusColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text(
-                            req.status.toUpperCase(),
-                            style: TextStyle(
-                                color: statusColor,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700),
-                          ),
+                          child: Text(req.status.toUpperCase(),
+                              style: TextStyle(
+                                  color: statusColor,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700)),
                         ),
                       ],
                     ),
-                  ).animate().fadeIn(delay: 450.ms);
+                  ).animate().fadeIn(delay: 470.ms);
                 }),
 
               const SizedBox(height: 28),
 
-              // ── Session History ────────────────────────────────────────────
+              // ── Session History ───────────────────────────────────────────
               Text('Session History',
                       style: Theme.of(context).textTheme.titleLarge)
                   .animate()
@@ -420,46 +452,46 @@ class _DashboardView extends StatelessWidget {
 
               const SizedBox(height: 28),
 
-              // ── Study History ──────────────────────────────────────────────
+              // ── Study History ─────────────────────────────────────────────
               if (sessionProvider.studyHistory.isNotEmpty) ...[
                 Text('Study History',
                         style: Theme.of(context).textTheme.titleLarge)
                     .animate()
-                    .fadeIn(delay: 600.ms),
+                    .fadeIn(delay: 580.ms),
                 const SizedBox(height: 12),
                 GlassCard(
                   child: Column(
                     children: sessionProvider.studyHistory
                         .take(5)
-                        .map(
-                          (topic) => Padding(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 8),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.sage,
-                                    borderRadius: BorderRadius.circular(4),
+                        .map((topic) => Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.sage,
+                                      borderRadius:
+                                          BorderRadius.circular(4),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(topic,
-                                      style: const TextStyle(
-                                          color: AppColors.white,
-                                          fontSize: 13)),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(topic,
+                                        style: const TextStyle(
+                                            color: AppColors.white,
+                                            fontSize: 13)),
+                                  ),
+                                ],
+                              ),
+                            ))
                         .toList(),
                   ),
-                ).animate().fadeIn(delay: 650.ms),
+                ).animate().fadeIn(delay: 600.ms),
               ],
+
               const SizedBox(height: 32),
             ],
           ),
@@ -469,7 +501,7 @@ class _DashboardView extends StatelessWidget {
   }
 }
 
-// ── Quick Action Card ──────────────────────────────────────────────────────────
+// ── Quick Action Card ──────────────────────────────────────────────────────
 
 class _QuickActionCard extends StatelessWidget {
   final String title;
@@ -510,21 +542,16 @@ class _QuickActionCard extends StatelessWidget {
                   child: Icon(icon, color: color, size: 20),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    height: 1.3,
-                  ),
-                ),
+                Text(title,
+                    style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3)),
                 const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                      color: AppColors.subtleText, fontSize: 11),
-                ),
+                Text(subtitle,
+                    style: const TextStyle(
+                        color: AppColors.subtleText, fontSize: 11)),
               ],
             ),
             if (badge > 0)
@@ -539,14 +566,11 @@ class _QuickActionCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                    child: Text(
-                      '$badge',
-                      style: const TextStyle(
-                        color: AppColors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    child: Text('$badge',
+                        style: const TextStyle(
+                            color: AppColors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700)),
                   ),
                 ),
               ),

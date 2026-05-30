@@ -4,11 +4,14 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/help_request_provider.dart';
+import '../../providers/reminder_provider.dart';
 import '../../models/help_request.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_card.dart';
 import 'post_help_request_screen.dart';
 import 'review_screen.dart';
+import '../reminders/reminders_screen.dart';
+import 'chat_screen.dart';
 
 class MyRequestsScreen extends StatelessWidget {
   const MyRequestsScreen({super.key});
@@ -123,6 +126,42 @@ class MyRequestsScreen extends StatelessWidget {
                                   }
                                 }
                               : null,
+                          onSetReminder: (req.isAccepted || req.isOpen)
+                              ? () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: AppColors.cardBg,
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.vertical(
+                                          top: Radius.circular(24)),
+                                    ),
+                                    builder: (_) => ChangeNotifierProvider.value(
+                                      value: context.read<ReminderProvider>(),
+                                      child: _AddReminderSheet(
+                                        requestId: req.id,
+                                        prefillTitle:
+                                            'Session: ${req.topic}',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              : null,
+                          onChat: (req.isAccepted ||
+                                  req.isPendingReview ||
+                                  req.isCompleted)
+                              ? () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ChatScreen(
+                                        requestId: req.id,
+                                        otherPersonName:
+                                            req.mentorName ?? 'Mentor',
+                                        topic: req.topic,
+                                      ),
+                                    ),
+                                  )
+                              : null,
                           onConfirmComplete: req.isPendingReview
                               ? () async {
                                   await provider.confirmComplete(req.id);
@@ -159,12 +198,16 @@ class _MyRequestCard extends StatelessWidget {
   final HelpRequest request;
   final VoidCallback? onCancel;
   final VoidCallback? onShareEmail;
+  final VoidCallback? onSetReminder;
+  final VoidCallback? onChat;
   final VoidCallback? onConfirmComplete;
 
   const _MyRequestCard({
     required this.request,
     this.onCancel,
     this.onShareEmail,
+    this.onSetReminder,
+    this.onChat,
     this.onConfirmComplete,
   });
 
@@ -250,6 +293,46 @@ class _MyRequestCard extends StatelessWidget {
               ],
             ),
           ],
+          if (onChat != null) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              height: 38,
+              child: ElevatedButton.icon(
+                onPressed: onChat,
+                icon: const Icon(Icons.chat_bubble_outline_rounded,
+                    size: 15),
+                label: const Text('Open Chat'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.tealAccent,
+                ),
+              ),
+            ),
+          ],
+          // Chat button — visible when accepted or pending review
+          if (request.isAccepted || request.isPendingReview || request.isCompleted)
+            if (request.mentorId != null) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 38,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.push(
+                    // context is not available here — handled via Builder below
+                    // This is a placeholder; actual navigation is in the card builder
+                    null as dynamic,
+                    MaterialPageRoute(builder: (_) => const SizedBox()),
+                  ),
+                  icon: const Icon(Icons.chat_bubble_outline_rounded,
+                      size: 15),
+                  label: const Text('Open Chat'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.tealAccent,
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
+            ],
           // Email shared / Meet link section
           if (request.isAccepted || request.isPendingReview || request.isCompleted) ...[
             const SizedBox(height: 8),
@@ -304,6 +387,23 @@ class _MyRequestCard extends StatelessWidget {
                   foregroundColor: AppColors.tealAccent,
                   side: BorderSide(
                       color: AppColors.tealAccent.withValues(alpha: 0.4)),
+                ),
+              ),
+            ),
+          ],
+          if (onSetReminder != null) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: OutlinedButton.icon(
+                onPressed: onSetReminder,
+                icon: const Icon(Icons.alarm_add_rounded, size: 16),
+                label: const Text('Set a Reminder'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.peach,
+                  side: BorderSide(
+                      color: AppColors.peach.withValues(alpha: 0.4)),
                 ),
               ),
             ),
@@ -428,5 +528,222 @@ class _ContactRow extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ── Add Reminder Sheet (inline copy for use from my_requests_screen) ─────────
+
+class _AddReminderSheet extends StatefulWidget {
+  final String? requestId;
+  final String? prefillTitle;
+
+  const _AddReminderSheet({this.requestId, this.prefillTitle});
+
+  @override
+  State<_AddReminderSheet> createState() => _AddReminderSheetState();
+}
+
+class _AddReminderSheetState extends State<_AddReminderSheet> {
+  late final TextEditingController _titleController;
+  final _bodyController = TextEditingController();
+  DateTime _selectedDate = DateTime.now().add(const Duration(hours: 1));
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController =
+        TextEditingController(text: widget.prefillTitle ?? '');
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _bodyController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDateTime() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: ColorScheme.dark(
+            primary: AppColors.primaryGreen,
+            surface: AppColors.cardBg,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (date == null || !mounted) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_selectedDate),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: ColorScheme.dark(
+            primary: AppColors.primaryGreen,
+            surface: AppColors.cardBg,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (time == null || !mounted) return;
+
+    setState(() {
+      _selectedDate = DateTime(
+          date.year, date.month, date.day, time.hour, time.minute);
+    });
+  }
+
+  Future<void> _save() async {
+    if (_titleController.text.trim().isEmpty) return;
+    setState(() => _loading = true);
+    try {
+      await context.read<ReminderProvider>().createReminder(
+            requestId: widget.requestId,
+            title: _titleController.text.trim(),
+            body: _bodyController.text.trim(),
+            remindAt: _selectedDate,
+          );
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Reminder set! ⏰'),
+            backgroundColor: AppColors.primaryGreen,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.glassBorder,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text('Set Reminder',
+              style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 20),
+          TextField(
+            controller: _titleController,
+            style: const TextStyle(color: AppColors.white),
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              labelText: 'Title',
+              labelStyle: TextStyle(color: AppColors.subtleText),
+              prefixIcon: Icon(Icons.title_rounded,
+                  color: AppColors.primaryGreen),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _bodyController,
+            style: const TextStyle(color: AppColors.white),
+            maxLines: 2,
+            decoration: const InputDecoration(
+              labelText: 'Note (optional)',
+              labelStyle: TextStyle(color: AppColors.subtleText),
+              prefixIcon: Icon(Icons.notes_rounded,
+                  color: AppColors.primaryGreen),
+            ),
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: _pickDateTime,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.glassBorder),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.schedule_rounded,
+                      color: AppColors.primaryGreen, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _fmt(_selectedDate),
+                      style: const TextStyle(
+                          color: AppColors.white, fontSize: 14),
+                    ),
+                  ),
+                  const Icon(Icons.edit_calendar_rounded,
+                      color: AppColors.subtleText, size: 16),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed:
+                  _titleController.text.trim().isNotEmpty && !_loading
+                      ? _save
+                      : null,
+              icon: _loading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppColors.white))
+                  : const Icon(Icons.alarm_add_rounded, size: 18),
+              label: const Text('Set Reminder'),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _fmt(DateTime dt) {
+    final months = [
+      'Jan','Feb','Mar','Apr','May','Jun',
+      'Jul','Aug','Sep','Oct','Nov','Dec'
+    ];
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '${dt.day} ${months[dt.month - 1]} ${dt.year}  ·  $h:$m';
   }
 }

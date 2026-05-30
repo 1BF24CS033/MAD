@@ -9,6 +9,8 @@ class HelpRequestProvider extends ChangeNotifier {
   List<HelpRequest> _openRequests = [];
   // Requests posted by the current learner
   List<HelpRequest> _myRequests = [];
+  // Requests accepted by the current mentor
+  List<HelpRequest> _myAcceptedRequests = [];
   // Open group studies
   List<HelpRequest> _openGroupStudies = [];
   bool _loading = false;
@@ -16,6 +18,7 @@ class HelpRequestProvider extends ChangeNotifier {
 
   List<HelpRequest> get openRequests => _openRequests;
   List<HelpRequest> get myRequests => _myRequests;
+  List<HelpRequest> get myAcceptedRequests => _myAcceptedRequests;
   List<HelpRequest> get openGroupStudies => _openGroupStudies;
   bool get loading => _loading;
   String get topicFilter => _topicFilter;
@@ -39,11 +42,13 @@ class HelpRequestProvider extends ChangeNotifier {
       final results = await Future.wait([
         HelpRequestService.fetchOpenRequests(topic: _topicFilter.isEmpty ? null : _topicFilter),
         HelpRequestService.fetchMyRequests(userId),
+        HelpRequestService.fetchMyAcceptedRequests(userId),
         HelpRequestService.fetchOpenGroupStudies(topic: _topicFilter.isEmpty ? null : _topicFilter),
       ]);
       _openRequests = results[0];
       _myRequests = results[1];
-      _openGroupStudies = results[2];
+      _myAcceptedRequests = results[2];
+      _openGroupStudies = results[3];
     } finally {
       _loading = false;
       notifyListeners();
@@ -249,27 +254,36 @@ class HelpRequestProvider extends ChangeNotifier {
     final index = list.indexWhere((r) => r.id == id);
     if (index != -1) {
       final old = list[index];
-      list[index] = HelpRequest(
-        id: old.id,
-        learnerId: old.learnerId,
-        learnerName: old.learnerName,
-        learnerSemester: old.learnerSemester,
-        learnerEmail: old.learnerEmail,
-        topic: old.topic,
-        description: old.description,
-        durationMinutes: old.durationMinutes,
-        status: status,
-        type: old.type,
-        mentorId: old.mentorId,
-        mentorName: old.mentorName,
-        mentorEmail: old.mentorEmail,
-        emailShared: old.emailShared,
-        wantsMeet: old.wantsMeet,
-        meetLink: old.meetLink,
-        maxParticipants: old.maxParticipants,
-        currentParticipants: old.currentParticipants,
-        createdAt: old.createdAt,
-      );
+      list[index] = _copyWith(old, status);
     }
+    // Also update myAcceptedRequests if present there
+    final ai = _myAcceptedRequests.indexWhere((r) => r.id == id);
+    if (ai != -1) {
+      _myAcceptedRequests[ai] = _copyWith(_myAcceptedRequests[ai], status);
+    }
+  }
+
+  HelpRequest _copyWith(HelpRequest old, String status) {
+    return HelpRequest(
+      id: old.id,
+      learnerId: old.learnerId,
+      learnerName: old.learnerName,
+      learnerSemester: old.learnerSemester,
+      learnerEmail: old.learnerEmail,
+      topic: old.topic,
+      description: old.description,
+      durationMinutes: old.durationMinutes,
+      status: status,
+      type: old.type,
+      mentorId: old.mentorId,
+      mentorName: old.mentorName,
+      mentorEmail: old.mentorEmail,
+      emailShared: old.emailShared,
+      wantsMeet: old.wantsMeet,
+      meetLink: old.meetLink,
+      maxParticipants: old.maxParticipants,
+      currentParticipants: old.currentParticipants,
+      createdAt: old.createdAt,
+    );
   }
 }

@@ -376,3 +376,56 @@ create policy "Participants can update their requests"
   on public.help_requests for update using (
     auth.uid() = learner_id or auth.uid() = mentor_id
   );
+
+-- ============================================================
+-- 10. REMINDERS
+-- Users set reminders tied to a help request or a custom note.
+-- ============================================================
+create table if not exists public.reminders (
+  id           uuid        primary key default uuid_generate_v4(),
+  user_id      uuid        not null references public.profiles(id) on delete cascade,
+  request_id   uuid        references public.help_requests(id) on delete cascade,
+  title        text        not null,
+  body         text        not null default '',
+  remind_at    timestamptz not null,
+  is_sent      boolean     not null default false,
+  created_at   timestamptz not null default now()
+);
+
+create index if not exists idx_reminders_user    on public.reminders(user_id, remind_at);
+create index if not exists idx_reminders_pending on public.reminders(remind_at) where is_sent = false;
+
+alter table public.reminders enable row level security;
+
+create policy "Users can manage own reminders"
+  on public.reminders for all using (auth.uid() = user_id);
+
+-- ============================================================
+-- 11. MESSAGES (in-app chat per help request)
+-- ============================================================
+create table if not exists public.messages (
+  id           uuid        primary key default uuid_generate_v4(),
+  request_id   uuid        not null references public.help_requests(id) on delete cascade,
+  sender_id    uuid        not null references public.profiles(id) on delete cascade,
+  content      text        not null,
+  created_at   timestamptz not null default now()
+);
+create index if not exists idx_messages_request on public.messages(request_id, created_at);
+alter table public.messages enable row level security;
+create policy "Participants can read messages"
+  on public.messages for select using (
+    exists (
+      select 1 from public.help_requests hr
+      where hr.id = request_id
+      and (hr.learner_id = auth.uid() or hr.mentor_id = auth.uid())
+    )
+  );
+create policy "Participants can send messages"
+  on public.messages for insert with check (
+    auth.uid() = sender_id and
+    exists (
+      select 1 from public.help_requests hr
+      where hr.id = request_id
+      and (hr.learner_id = auth.uid() or hr.mentor_id = auth.uid())
+    )
+  );

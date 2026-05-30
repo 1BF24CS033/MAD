@@ -9,6 +9,7 @@ import 'providers/project_provider.dart';
 import 'providers/reward_provider.dart';
 import 'providers/mentor_provider.dart';
 import 'providers/help_request_provider.dart';
+import 'providers/reminder_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/onboarding/welcome_screen.dart';
 import 'screens/home/home_screen.dart';
@@ -50,6 +51,7 @@ class BenkyoApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => RewardProvider()),
         ChangeNotifierProvider(create: (_) => MentorProvider()),
         ChangeNotifierProvider(create: (_) => HelpRequestProvider()),
+        ChangeNotifierProvider(create: (_) => ReminderProvider()),
       ],
       child: MaterialApp(
         title: 'Benkyo',
@@ -99,6 +101,8 @@ class _AppLoaderState extends State<_AppLoader> {
       context.read<MentorProvider>().loadMentors(),
       context.read<HelpRequestProvider>().loadData(),
     ]);
+    // Init reminders separately — it also starts the polling timer
+    await context.read<ReminderProvider>().init();
     if (mounted) setState(() => _loaded = true);
   }
 

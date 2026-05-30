@@ -37,6 +37,22 @@ class HelpRequestService {
         .toList();
   }
 
+  /// Requests accepted by the current mentor (active sessions).
+  static Future<List<HelpRequest>> fetchMyAcceptedRequests(
+      String mentorId) async {
+    final rows = await _db
+        .from('help_requests')
+        .select(_select)
+        .eq('mentor_id', mentorId)
+        .inFilter('status', ['accepted', 'pending_review'])
+        .order('created_at', ascending: false);
+
+    return rows
+        .cast<Map<String, dynamic>>()
+        .map((r) => HelpRequest.fromJson(r, currentUserId: mentorId))
+        .toList();
+  }
+
   /// Requests posted by the current learner.
   static Future<List<HelpRequest>> fetchMyRequests(
       String userId) async {

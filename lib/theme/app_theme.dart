@@ -15,6 +15,7 @@ class AppColors {
   static const Color surfaceDark = Color(0xFF121212);
   static const Color glassBorder = Color(0x336A8F79);
   static const Color glassOverlay = Color(0x1AFFFFFF);
+  static const Color glassBg = Color(0xFF1E1E1E);
   static const Color subtleText = Color(0xFF8A8A8A);
 }
 
