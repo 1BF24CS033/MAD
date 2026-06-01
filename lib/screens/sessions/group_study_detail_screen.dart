@@ -8,6 +8,7 @@ import '../../services/help_request_service.dart';
 import '../../services/supabase_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_card.dart';
+import 'group_chat_screen.dart';
 
 class GroupStudyDetailScreen extends StatefulWidget {
   final HelpRequest study;
@@ -103,6 +104,24 @@ class _GroupStudyDetailScreenState extends State<GroupStudyDetailScreen> {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
+        actions: [
+          if (_hasJoined || isCreator)
+            IconButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => GroupChatScreen(
+                    roomId: study.id,
+                    roomType: 'group_study',
+                    title: study.topic,
+                    subtitle: 'Group Study Chat',
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.chat_bubble_outline_rounded),
+              tooltip: 'Group Chat',
+            ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -363,6 +382,34 @@ class _GroupStudyDetailScreenState extends State<GroupStudyDetailScreen> {
                       }),
 
                       const SizedBox(height: 24),
+
+                      // Chat button (for members)
+                      if (_hasJoined || isCreator) ...[
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton.icon(
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => GroupChatScreen(
+                                  roomId: study.id,
+                                  roomType: 'group_study',
+                                  title: study.topic,
+                                  subtitle: 'Group Study Chat',
+                                ),
+                              ),
+                            ),
+                            icon: const Icon(
+                                Icons.chat_bubble_outline_rounded,
+                                size: 18),
+                            label: const Text('Open Group Chat'),
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.tealAccent),
+                          ),
+                        ).animate().fadeIn(delay: 380.ms),
+                        const SizedBox(height: 12),
+                      ],
 
                       // Join / Leave button
                       if (!isCreator)

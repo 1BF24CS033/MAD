@@ -227,7 +227,7 @@ class _MentorListScreenState extends State<MentorListScreen> {
                               crossAxisCount: 2,
                               mainAxisSpacing: 12,
                               crossAxisSpacing: 12,
-                              childAspectRatio: 0.85,
+                              childAspectRatio: 0.78,
                             ),
                             itemCount: mentors.length,
                             itemBuilder: (context, index) {
@@ -399,25 +399,6 @@ class _MentorCard extends StatelessWidget {
                       ),
                     ))
                 .toList(),
-          ),
-          const SizedBox(height: 8),
-          // Request button
-          SizedBox(
-            width: double.infinity,
-            height: 28,
-            child: ElevatedButton(
-              onPressed: null, // handled by parent GestureDetector
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.tealAccent.withValues(alpha: 0.2),
-                foregroundColor: AppColors.tealAccent,
-                padding: EdgeInsets.zero,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-              ),
-              child: const Text('Request Session',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
-            ),
           ),
         ],
       ),

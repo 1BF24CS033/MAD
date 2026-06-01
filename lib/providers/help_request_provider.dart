@@ -137,11 +137,11 @@ class HelpRequestProvider extends ChangeNotifier {
   /// a Meet link is auto-generated and saved to the database.
   ///
   /// Returns the generated Meet link, or null.
-  Future<String?> acceptRequest(String requestId) async {
+  Future<void> acceptRequest(String requestId) async {
     final mentorId = SupabaseService.currentUserId!;
 
-    // Find the request before removing it so we can check wantsMeet
-    final request = _openRequests.firstWhere(
+    // Find the request before removing it
+    final req = _openRequests.firstWhere(
       (r) => r.id == requestId,
       orElse: () => HelpRequest(
         id: requestId,
@@ -153,34 +153,73 @@ class HelpRequestProvider extends ChangeNotifier {
       ),
     );
 
+    // Write to DB first — if this fails, throw so UI can show error
     await HelpRequestService.acceptRequest(requestId, mentorId);
 
-    // Auto-generate Meet link if the learner requested it
-    String? meetLink;
-    if (request.wantsMeet) {
-      try {
-        final attendees = <String>[];
-        if (request.learnerEmail != null) {
-          attendees.add(request.learnerEmail!);
-        }
-        meetLink = await GoogleMeetService.createMeetLink(
-          topic: request.topic,
-          durationMinutes: request.durationMinutes,
-          attendeeEmails: attendees,
-        );
-        if (meetLink != null) {
-          await HelpRequestService.saveMeetLink(requestId, meetLink);
-        }
-      } catch (_) {
-        // Meet creation failed — request is still accepted.
-        // The mentor can manually share a link later.
-      }
-    }
-
-    // Remove from open list (it's no longer open)
+    // Update local state only after successful DB write
     _openRequests.removeWhere((r) => r.id == requestId);
+    if (req.learnerId.isNotEmpty) {
+      final accepted = _copyWith(req, 'accepted');
+      _myAcceptedRequests.insert(0, accepted);
+    }
     notifyListeners();
-    return meetLink;
+  }
+
+  /// Separately schedule a Google Meet for an already-accepted request.
+  Future<String?> scheduleMeet(String requestId) async {
+    final req = _myAcceptedRequests.firstWhere(
+      (r) => r.id == requestId,
+      orElse: () => HelpRequest(
+        id: requestId,
+        learnerId: '',
+        learnerName: '',
+        topic: '',
+        description: '',
+        createdAt: DateTime.now(),
+      ),
+    );
+    try {
+      final attendees = <String>[];
+      if (req.learnerEmail != null) attendees.add(req.learnerEmail!);
+      final meetLink = await GoogleMeetService.createMeetLink(
+        topic: req.topic,
+        durationMinutes: req.durationMinutes,
+        attendeeEmails: attendees,
+      );
+      if (meetLink != null) {
+        await HelpRequestService.saveMeetLink(requestId, meetLink);
+        // Update local state with the meet link
+        final i = _myAcceptedRequests.indexWhere((r) => r.id == requestId);
+        if (i != -1) {
+          final old = _myAcceptedRequests[i];
+          _myAcceptedRequests[i] = HelpRequest(
+            id: old.id,
+            learnerId: old.learnerId,
+            learnerName: old.learnerName,
+            learnerSemester: old.learnerSemester,
+            learnerEmail: old.learnerEmail,
+            topic: old.topic,
+            description: old.description,
+            durationMinutes: old.durationMinutes,
+            status: old.status,
+            type: old.type,
+            mentorId: old.mentorId,
+            mentorName: old.mentorName,
+            mentorEmail: old.mentorEmail,
+            emailShared: old.emailShared,
+            wantsMeet: old.wantsMeet,
+            meetLink: meetLink,
+            maxParticipants: old.maxParticipants,
+            currentParticipants: old.currentParticipants,
+            createdAt: old.createdAt,
+          );
+          notifyListeners();
+        }
+      }
+      return meetLink;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   /// Mentor marks the request as done → goes to pending_review.

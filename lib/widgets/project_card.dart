@@ -110,7 +110,7 @@ class ProjectCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 18),
                     textStyle: const TextStyle(fontSize: 12),
                   ),
-                  child: const Text('Join'),
+                  child: const Text('View'),
                 ),
               ),
             ],

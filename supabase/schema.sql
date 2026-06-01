@@ -429,3 +429,25 @@ create policy "Participants can send messages"
       and (hr.learner_id = auth.uid() or hr.mentor_id = auth.uid())
     )
   );
+
+-- ============================================================
+-- 12. GROUP CHAT MESSAGES (for projects and group studies)
+-- room_type: 'project' | 'group_study'
+-- room_id: project.id or help_request.id
+-- ============================================================
+create table if not exists public.group_messages (
+  id        uuid        primary key default uuid_generate_v4(),
+  room_id   uuid        not null,
+  room_type text        not null check (room_type in ('project','group_study')),
+  sender_id uuid        not null references public.profiles(id) on delete cascade,
+  content   text        not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_group_messages_room
+  on public.group_messages(room_id, created_at);
+alter table public.group_messages enable row level security;
+-- Any authenticated user can read/send (membership checked in app layer)
+create policy "Auth users can read group messages"
+  on public.group_messages for select using (auth.role() = 'authenticated');
+create policy "Auth users can send group messages"
+  on public.group_messages for insert with check (auth.uid() = sender_id);

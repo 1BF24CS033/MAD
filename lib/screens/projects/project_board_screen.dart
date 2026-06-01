@@ -6,6 +6,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/project_card.dart';
 import '../../widgets/search_bar_widget.dart';
 import 'post_project_screen.dart';
+import 'project_detail_screen.dart';
 
 class ProjectBoardScreen extends StatelessWidget {
   const ProjectBoardScreen({super.key});
@@ -105,43 +106,24 @@ class ProjectBoardScreen extends StatelessWidget {
                     : ListView.builder(
                         itemCount: projects.length,
                         itemBuilder: (context, index) {
-                          return ProjectCard(
-                            project: projects[index],
-                            onJoin: () async {
-                              try {
-                                await projectProvider
-                                    .joinProject(projects[index].id);
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Joined "${projects[index].title}" 🎉',
-                                        style: const TextStyle(
-                                            color: AppColors.white),
-                                      ),
-                                      backgroundColor: AppColors.primaryGreen,
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          e.toString().contains('already')
-                                              ? 'You already joined this project'
-                                              : 'Could not join: $e'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              }
-                            },
+                          return GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProjectDetailScreen(
+                                    project: projects[index]),
+                              ),
+                            ),
+                            child: ProjectCard(
+                              project: projects[index],
+                              onJoin: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ProjectDetailScreen(
+                                      project: projects[index]),
+                                ),
+                              ),
+                            ),
                           )
                               .animate()
                               .fadeIn(delay: (200 + index * 100).ms)

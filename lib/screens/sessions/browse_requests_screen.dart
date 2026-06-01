@@ -189,16 +189,14 @@ class _BrowseTab extends StatelessWidget {
                         return _OpenRequestCard(
                           request: req,
                           onAccept: () async {
-                            final meetLink =
-                                await provider.acceptRequest(req.id);
+                            await provider.acceptRequest(req.id);
                             await userProvider.addMentorPoints(
                                 AppConstants.pointsPerSession);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(meetLink != null
-                                      ? 'Accepted! Meet link created ✓'
-                                      : 'Accepted! +${AppConstants.pointsPerSession} pts'),
+                                  content: Text(
+                                      'Accepted! +${AppConstants.pointsPerSession} pts — go to My Sessions to chat'),
                                   backgroundColor: AppColors.primaryGreen,
                                   behavior: SnackBarBehavior.floating,
                                 ),
@@ -266,6 +264,33 @@ class _MySessionsTab extends StatelessWidget {
                   behavior: SnackBarBehavior.floating,
                 ),
               );
+            }
+          },
+          onScheduleMeet: () async {
+            try {
+              final link = await provider.scheduleMeet(req.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(link != null
+                        ? 'Meet link created! Shared with learner.'
+                        : 'Could not create Meet link'),
+                    backgroundColor: link != null
+                        ? AppColors.primaryGreen
+                        : Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Meet error: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
         )
@@ -365,10 +390,12 @@ class _AcceptedSessionCard extends StatelessWidget {
   final HelpRequest request;
   final VoidCallback onChat;
   final VoidCallback onMarkDone;
+  final VoidCallback onScheduleMeet;
   const _AcceptedSessionCard(
       {required this.request,
       required this.onChat,
-      required this.onMarkDone});
+      required this.onMarkDone,
+      required this.onScheduleMeet});
 
   @override
   Widget build(BuildContext context) {
@@ -416,34 +443,62 @@ class _AcceptedSessionCard extends StatelessWidget {
                       color: AppColors.subtleText, fontSize: 12)),
             ],
           ),
+          // Show existing meet link if present
+          if (request.meetLink != null) ...[
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: onScheduleMeet,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.sage.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: AppColors.sage.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.videocam_rounded,
+                        size: 14, color: AppColors.sage),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        request.meetLink!,
+                        style: const TextStyle(
+                            color: AppColors.sage, fontSize: 11),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
+          // Row 1: Chat + Mark Done
           Row(
             children: [
-              // Chat button
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: onChat,
                   icon: const Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      size: 15),
+                      Icons.chat_bubble_outline_rounded, size: 15),
                   label: const Text('Chat'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.tealAccent,
                     side: BorderSide(
-                        color:
-                            AppColors.tealAccent.withValues(alpha: 0.5)),
+                        color: AppColors.tealAccent.withValues(alpha: 0.5)),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
                 ),
               ),
               const SizedBox(width: 10),
-              // Mark done button (only if not already pending review)
               if (!isPendingReview)
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: onMarkDone,
-                    icon: const Icon(Icons.check_circle_outline,
-                        size: 15),
+                    icon: const Icon(Icons.check_circle_outline, size: 15),
                     label: const Text('Mark Done'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryGreen,
@@ -452,6 +507,24 @@ class _AcceptedSessionCard extends StatelessWidget {
                   ),
                 ),
             ],
+          ),
+          const SizedBox(height: 8),
+          // Row 2: Schedule Meet (separate, optional)
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onScheduleMeet,
+              icon: const Icon(Icons.videocam_rounded, size: 15),
+              label: Text(request.meetLink != null
+                  ? 'Reschedule Meet'
+                  : 'Schedule Google Meet'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.sage,
+                side: BorderSide(
+                    color: AppColors.sage.withValues(alpha: 0.5)),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
           ),
         ],
       ),

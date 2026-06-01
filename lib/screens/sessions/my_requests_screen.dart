@@ -13,13 +13,27 @@ import 'review_screen.dart';
 import '../reminders/reminders_screen.dart';
 import 'chat_screen.dart';
 
-class MyRequestsScreen extends StatelessWidget {
+class MyRequestsScreen extends StatefulWidget {
   const MyRequestsScreen({super.key});
+
+  @override
+  State<MyRequestsScreen> createState() => _MyRequestsScreenState();
+}
+
+class _MyRequestsScreenState extends State<MyRequestsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Always fetch fresh data so status changes (e.g. mentor accepted) are visible
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<HelpRequestProvider>().loadData();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<HelpRequestProvider>();
-    final requests = provider.myHelpRequests;
+    final requests = provider.myRequests.where((r) => r.isHelp).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -293,46 +307,6 @@ class _MyRequestCard extends StatelessWidget {
               ],
             ),
           ],
-          if (onChat != null) ...[
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              height: 38,
-              child: ElevatedButton.icon(
-                onPressed: onChat,
-                icon: const Icon(Icons.chat_bubble_outline_rounded,
-                    size: 15),
-                label: const Text('Open Chat'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.tealAccent,
-                ),
-              ),
-            ),
-          ],
-          // Chat button — visible when accepted or pending review
-          if (request.isAccepted || request.isPendingReview || request.isCompleted)
-            if (request.mentorId != null) ...[
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                height: 38,
-                child: ElevatedButton.icon(
-                  onPressed: () => Navigator.push(
-                    // context is not available here — handled via Builder below
-                    // This is a placeholder; actual navigation is in the card builder
-                    null as dynamic,
-                    MaterialPageRoute(builder: (_) => const SizedBox()),
-                  ),
-                  icon: const Icon(Icons.chat_bubble_outline_rounded,
-                      size: 15),
-                  label: const Text('Open Chat'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.tealAccent,
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-              ),
-            ],
           // Email shared / Meet link section
           if (request.isAccepted || request.isPendingReview || request.isCompleted) ...[
             const SizedBox(height: 8),
@@ -374,6 +348,21 @@ class _MyRequestCard extends StatelessWidget {
             ],
           ),
           // Action buttons
+          if (onChat != null) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              height: 42,
+              child: ElevatedButton.icon(
+                onPressed: onChat,
+                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                label: const Text('Open Chat'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.tealAccent,
+                ),
+              ),
+            ),
+          ],
           if (onShareEmail != null) ...[
             const Divider(color: AppColors.glassBorder, height: 20),
             SizedBox(
