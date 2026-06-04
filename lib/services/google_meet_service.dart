@@ -69,10 +69,14 @@ class GoogleMeetService {
           scheduledTime ?? DateTime.now().add(const Duration(minutes: 2));
       final endTime = startTime.add(Duration(minutes: durationMinutes));
 
+      // NOTE: We intentionally omit `attendees` here because adding them
+      // triggers People API lookups which require that API to be enabled.
+      // Users can join the Meet via the shared link instead.
       final event = calendar.Event(
         summary: 'Benkyo: $topic',
         description:
-            'Study session created via Benkyo – the peer-to-peer study platform.',
+            'Study session created via Benkyo – the peer-to-peer study platform.\n\n'
+            'Attendees: ${attendeeEmails.isEmpty ? "TBD" : attendeeEmails.join(", ")}',
         start: calendar.EventDateTime(
           dateTime: startTime,
           timeZone: 'Asia/Kolkata',
@@ -81,9 +85,6 @@ class GoogleMeetService {
           dateTime: endTime,
           timeZone: 'Asia/Kolkata',
         ),
-        attendees: attendeeEmails
-            .map((email) => calendar.EventAttendee(email: email))
-            .toList(),
         conferenceData: calendar.ConferenceData(
           createRequest: calendar.CreateConferenceRequest(
             requestId: 'benkyo-${DateTime.now().millisecondsSinceEpoch}',

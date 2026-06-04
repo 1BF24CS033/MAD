@@ -8,7 +8,6 @@ import '../../providers/reminder_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/mentor_points_badge.dart';
-import '../../widgets/role_toggle.dart';
 import '../../widgets/session_tile.dart';
 import '../mentorship/mentor_list_screen.dart';
 import '../projects/project_board_screen.dart';
@@ -213,16 +212,6 @@ class _DashboardView extends StatelessWidget {
                   ],
                 ),
               ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
-
-              const SizedBox(height: 6),
-
-              // Role toggle
-              Center(
-                child: RoleToggle(
-                  isMentor: user.isMentor,
-                  onToggle: (_) => userProvider.toggleRole(),
-                ),
-              ).animate().fadeIn(delay: 200.ms),
 
               const SizedBox(height: 22),
 

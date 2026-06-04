@@ -165,17 +165,17 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _scrollToBottom({bool animate = true}) {
-    // With reverse:true ListView, scrolling to 0 shows the latest message
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
       if (animate) {
         _scrollController.animateTo(
-          0,
+          _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
         );
       } else {
-        _scrollController.jumpTo(0);
+        _scrollController.jumpTo(
+            _scrollController.position.maxScrollExtent);
       }
     });
   }
@@ -286,22 +286,19 @@ class _ChatScreenState extends State<ChatScreen> {
                         controller: _scrollController,
                         padding:
                             const EdgeInsets.fromLTRB(12, 16, 12, 8),
-                        reverse: true,
                         itemCount: _messages.length,
                         itemBuilder: (context, index) {
-                          // Reverse index so newest is at bottom
-                          final actualIndex = _messages.length - 1 - index;
-                          final msg = _messages[actualIndex];
+                          final msg = _messages[index];
                           final isMe = msg.senderId == _userId;
 
-                          final showDate = actualIndex == 0 ||
+                          final showDate = index == 0 ||
                               !_sameDay(
-                                  _messages[actualIndex - 1].createdAt,
+                                  _messages[index - 1].createdAt,
                                   msg.createdAt);
 
                           final showAvatar = !isMe &&
-                              (actualIndex == _messages.length - 1 ||
-                                  _messages[actualIndex + 1].senderId !=
+                              (index == _messages.length - 1 ||
+                                  _messages[index + 1].senderId !=
                                       msg.senderId);
 
                           return Column(

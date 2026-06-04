@@ -59,7 +59,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           .select(_select)
           .eq('room_id', widget.roomId)
           .eq('room_type', widget.roomType)
-          .order('created_at');
+          .order('created_at', ascending: true);
 
       if (!mounted) return;
       setState(() {
@@ -157,14 +157,16 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   void _jump() {
     if (_scrollController.hasClients) {
-      _scrollController.jumpTo(0);
+      _scrollController.jumpTo(
+          _scrollController.position.maxScrollExtent);
     }
   }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(0,
+        _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeOut);
       }
@@ -263,18 +265,15 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                       )
                     : ListView.builder(
                         controller: _scrollController,
-                        reverse: true,
                         padding:
                             const EdgeInsets.fromLTRB(12, 16, 12, 8),
                         itemCount: _messages.length,
                         itemBuilder: (context, index) {
-                          final actualIndex =
-                              _messages.length - 1 - index;
-                          final msg = _messages[actualIndex];
+                          final msg = _messages[index];
                           final isMe = msg.senderId == _userId;
                           final showName = !isMe &&
-                              (actualIndex == 0 ||
-                                  _messages[actualIndex - 1].senderId !=
+                              (index == 0 ||
+                                  _messages[index - 1].senderId !=
                                       msg.senderId);
 
                           return _Bubble(

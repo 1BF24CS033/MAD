@@ -40,7 +40,8 @@ class _SignInScreenState extends State<SignInScreen> {
             email: email,
             password: password,
           );
-      // Navigation is handled by the Consumer in main.dart
+      // Pop this screen so the Consumer in main.dart can show HomeScreen
+      if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
