@@ -30,7 +30,7 @@ class SessionProvider extends ChangeNotifier {
   List<PeerWorkSession> get activeSessions =>
       _sessions.where((s) => s.status != 'declined').toList();
 
-  // ── Load ────────────────────────────────────────────────────────────────────
+  // Load 
 
   Future<void> loadData() async {
     final userId = SupabaseService.currentUserId;
@@ -52,7 +52,7 @@ class SessionProvider extends ChangeNotifier {
     }
   }
 
-  // ── Request ─────────────────────────────────────────────────────────────────
+  // Request 
 
   /// Learner sends a session request to a mentor.
   Future<void> requestSession({
@@ -73,7 +73,7 @@ class SessionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Accept / Decline ────────────────────────────────────────────────────────
+  // Accept / Decline 
 
   Future<void> acceptSession(String sessionId) async {
     await SessionService.acceptSession(sessionId);
@@ -85,7 +85,7 @@ class SessionProvider extends ChangeNotifier {
     _updateStatus(sessionId, 'declined');
   }
 
-  // ── Complete ────────────────────────────────────────────────────────────────
+  // Complete 
 
   Future<void> completeSession(String sessionId, int pointsAwarded) async {
     await SessionService.completeSession(sessionId, pointsAwarded);
@@ -110,7 +110,7 @@ class SessionProvider extends ChangeNotifier {
     }
   }
 
-  // ── Study History ───────────────────────────────────────────────────────────
+  // Study History 
 
   Future<void> addStudyTopic(String topic) async {
     final userId = SupabaseService.currentUserId;
@@ -120,7 +120,7 @@ class SessionProvider extends ChangeNotifier {
     await SessionService.addStudyTopic(userId, topic);
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
+  // Helpers 
 
   void _updateStatus(String sessionId, String newStatus) {
     final index = _sessions.indexWhere((s) => s.id == sessionId);

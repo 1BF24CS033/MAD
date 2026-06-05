@@ -43,7 +43,6 @@ class _TopicsInterestScreenState extends State<TopicsInterestScreen> {
     final userProvider = context.read<UserProvider>();
 
     try {
-      // Create the Supabase auth user and save the profile in one call
       await userProvider.signUp(
         email: widget.email,
         password: widget.password,
@@ -57,8 +56,8 @@ class _TopicsInterestScreenState extends State<TopicsInterestScreen> {
         await userProvider.updateMentorTopics(_selectedTopics);
       }
 
-      // Navigation is handled automatically by the Consumer in main.dart
-      // (onboardingComplete becomes true → _AppLoader → HomeScreen)
+      // Navigation by consumer in main.dart
+      // (onboardingComplete true → _AppLoader → HomeScreen)
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -17,7 +17,7 @@ class ReminderProvider extends ChangeNotifier {
       _reminders.where((r) => r.isSent || r.isDue).toList();
   bool get loading => _loading;
 
-  // ── Init ────────────────────────────────────────────────────────────────────
+  // Init 
 
   /// Call once after login. Loads reminders and starts the polling timer.
   Future<void> init() async {
@@ -42,7 +42,7 @@ class ReminderProvider extends ChangeNotifier {
     super.dispose();
   }
 
-  // ── Load ────────────────────────────────────────────────────────────────────
+  // Load 
 
   Future<void> loadReminders() async {
     final userId = SupabaseService.currentUserId;
@@ -59,7 +59,7 @@ class ReminderProvider extends ChangeNotifier {
     }
   }
 
-  // ── Check & fire due reminders ───────────────────────────────────────────
+  // Check & fire due reminders 
 
   Future<void> _checkDueReminders() async {
     final userId = SupabaseService.currentUserId;
@@ -95,7 +95,7 @@ class ReminderProvider extends ChangeNotifier {
     if (due.isNotEmpty) notifyListeners();
   }
 
-  // ── CRUD ─────────────────────────────────────────────────────────────────
+  // CRUD 
 
   Future<void> createReminder({
     String? requestId,

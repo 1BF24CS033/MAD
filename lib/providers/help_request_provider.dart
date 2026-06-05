@@ -29,7 +29,7 @@ class HelpRequestProvider extends ChangeNotifier {
   List<HelpRequest> get myGroupStudies =>
       _myRequests.where((r) => r.isGroupStudy).toList();
 
-  // ── Load ────────────────────────────────────────────────────────────────────
+  // Load 
 
   Future<void> loadData() async {
     final userId = SupabaseService.currentUserId;
@@ -65,7 +65,7 @@ class HelpRequestProvider extends ChangeNotifier {
     loadData();
   }
 
-  // ── Learner actions ─────────────────────────────────────────────────────────
+  // Learner actions 
 
   Future<HelpRequest> postRequest({
     required String topic,
@@ -131,12 +131,8 @@ class HelpRequestProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Mentor actions ──────────────────────────────────────────────────────────
+  // Mentor actions 
 
-  /// Accepts a help request. If the learner opted for Google Meet,
-  /// a Meet link is auto-generated and saved to the database.
-  ///
-  /// Returns the generated Meet link, or null.
   Future<void> acceptRequest(String requestId) async {
     final mentorId = SupabaseService.currentUserId!;
 
@@ -235,7 +231,7 @@ class HelpRequestProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Group Study actions ─────────────────────────────────────────────────────
+  // Group Study actions 
 
   Future<HelpRequest> postGroupStudy({
     required String topic,
@@ -285,7 +281,7 @@ class HelpRequestProvider extends ChangeNotifier {
     await loadData(); // Reload to get fresh counts
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
+  // Helpers 
 
   void _updateStatus(String id, String status,
       {bool inMyRequests = false}) {

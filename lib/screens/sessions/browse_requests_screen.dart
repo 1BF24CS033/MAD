@@ -103,9 +103,9 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen>
         child: TabBarView(
           controller: _tabs,
           children: [
-            // ── Tab 1: Browse open requests ──────────────────────────────
+            // ── Tab 1: Browse open requests 
             _BrowseTab(provider: provider, userProvider: userProvider),
-            // ── Tab 2: My accepted sessions ──────────────────────────────
+            // ── Tab 2: My accepted sessions 
             _MySessionsTab(provider: provider),
           ],
         ),
@@ -114,7 +114,7 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen>
   }
 }
 
-// ── Browse Tab ─────────────────────────────────────────────────────────────
+// Browse Tab
 
 class _BrowseTab extends StatelessWidget {
   final HelpRequestProvider provider;
@@ -215,7 +215,7 @@ class _BrowseTab extends StatelessWidget {
   }
 }
 
-// ── My Sessions Tab ────────────────────────────────────────────────────────
+// My Sessions Tab
 
 class _MySessionsTab extends StatelessWidget {
   final HelpRequestProvider provider;
@@ -302,7 +302,7 @@ class _MySessionsTab extends StatelessWidget {
   }
 }
 
-// ── Open Request Card ──────────────────────────────────────────────────────
+// Open Request Card
 
 class _OpenRequestCard extends StatelessWidget {
   final HelpRequest request;
@@ -384,7 +384,7 @@ class _OpenRequestCard extends StatelessWidget {
   }
 }
 
-// ── Accepted Session Card ──────────────────────────────────────────────────
+// Accepted Session Card
 
 class _AcceptedSessionCard extends StatelessWidget {
   final HelpRequest request;
@@ -532,7 +532,7 @@ class _AcceptedSessionCard extends StatelessWidget {
   }
 }
 
-// ── Shared small widgets ───────────────────────────────────────────────────
+// Shared small widgets
 
 class _TopicBadge extends StatelessWidget {
   final String topic;

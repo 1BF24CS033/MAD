@@ -1,8 +1,4 @@
-// Google Meet Service
-//
-// This service handles the creation of Google Meet links via the
-// Google Calendar API. It requires the user to sign in with Google
-// and grant calendar event creation permissions.
+
 
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/calendar/v3.dart' as calendar;
@@ -40,9 +36,7 @@ class GoogleMeetService {
   /// Cached sign-in account for re-use within the session.
   static GoogleSignInAccount? _currentUser;
 
-  /// Creates a Google Calendar event with an auto-generated Meet link.
-  ///
-  /// Returns the Meet link URL, or null if creation failed.
+ 
   static Future<String?> createMeetLink({
     required String topic,
     required int durationMinutes,
@@ -69,9 +63,6 @@ class GoogleMeetService {
           scheduledTime ?? DateTime.now().add(const Duration(minutes: 2));
       final endTime = startTime.add(Duration(minutes: durationMinutes));
 
-      // NOTE: We intentionally omit `attendees` here because adding them
-      // triggers People API lookups which require that API to be enabled.
-      // Users can join the Meet via the shared link instead.
       final event = calendar.Event(
         summary: 'Benkyo: $topic',
         description:

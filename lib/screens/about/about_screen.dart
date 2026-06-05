@@ -32,7 +32,7 @@ class AboutScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 24),
 
-              // ── Profile card ───────────────────────────────────────────────
+              // Profile card
               GlassCard(
                 borderColor: AppColors.primaryGreen.withValues(alpha: 0.3),
                 child: Row(
@@ -93,7 +93,7 @@ class AboutScreen extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // ── Stats row ──────────────────────────────────────────────────
+              // Stats row 
               Row(
                 children: [
                   Expanded(
@@ -127,7 +127,7 @@ class AboutScreen extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // ── Topics of interest ─────────────────────────────────────────
+              // Topics of interest 
               if (user.topicsOfInterest.isNotEmpty) ...[
                 Text('Your Topics',
                         style: Theme.of(context).textTheme.titleMedium)
@@ -161,7 +161,7 @@ class AboutScreen extends StatelessWidget {
                 const SizedBox(height: 20),
               ],
 
-              // ── About Benkyo ───────────────────────────────────────────────
+              // About Benkyo 
               Text('About Benkyo',
                       style: Theme.of(context).textTheme.titleMedium)
                   .animate()
@@ -224,7 +224,7 @@ class AboutScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // ── SDG alignment ──────────────────────────────────────────────
+              // SDG alignment 
               GlassCard(
                 borderColor: AppColors.tealAccent.withValues(alpha: 0.3),
                 child: Column(
@@ -252,7 +252,7 @@ class AboutScreen extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // ── Sign out ───────────────────────────────────────────────────
+              // Sign out 
               SizedBox(
                 width: double.infinity,
                 height: 52,

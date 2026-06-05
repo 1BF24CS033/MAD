@@ -21,7 +21,7 @@ class ProjectProvider extends ChangeNotifier {
         .toList();
   }
 
-  // ── Load ────────────────────────────────────────────────────────────────────
+  // Load 
 
   Future<void> loadData() async {
     _loading = true;
@@ -35,7 +35,7 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
-  // ── Mutations ───────────────────────────────────────────────────────────────
+  // Mutations 
 
   Future<void> addProject(ProjectModel project) async {
     final created = await ProjectService.createProject(project);
@@ -69,7 +69,7 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
-  // ── Filters ─────────────────────────────────────────────────────────────────
+  // Filters 
 
   void setFilter(String topic) {
     _filterTopic = topic;

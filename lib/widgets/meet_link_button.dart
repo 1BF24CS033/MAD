@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'package:flutter/services.dart';
 
-/// A reusable button that shows a Google Meet link with copy + open options.
+//Copy and Paste Options with Google meet link
 class MeetLinkButton extends StatelessWidget {
   final String meetLink;
 

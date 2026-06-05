@@ -2,7 +2,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/project_model.dart';
 import 'supabase_service.dart';
 
-/// Handles all database operations for [projects] and [project_members].
 class ProjectService {
   static SupabaseClient get _db => SupabaseService.client;
 

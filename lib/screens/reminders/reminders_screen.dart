@@ -120,7 +120,7 @@ class RemindersScreen extends StatelessWidget {
   }
 }
 
-// ── Section header ─────────────────────────────────────────────────────────
+// Section header
 
 class _SectionHeader extends StatelessWidget {
   final String text;
@@ -132,7 +132,7 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ── Reminder card ──────────────────────────────────────────────────────────
+// Reminder card
 
 class _ReminderCard extends StatelessWidget {
   final ReminderModel reminder;
@@ -259,7 +259,7 @@ class _ReminderCard extends StatelessWidget {
   }
 }
 
-// ── Add Reminder bottom sheet ──────────────────────────────────────────────
+// Add Reminder bottom sheet
 
 class _AddReminderSheet extends StatefulWidget {
   final String? requestId;

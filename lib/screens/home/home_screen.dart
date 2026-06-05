@@ -18,7 +18,7 @@ import '../sessions/my_requests_screen.dart';
 import '../reminders/reminders_screen.dart';
 import '../about/about_screen.dart';
 
-// ── HomeScreen ─────────────────────────────────────────────────────────────
+// HomeScreen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ── Dashboard ──────────────────────────────────────────────────────────────
+// Dashboard 
 
 class _DashboardView extends StatelessWidget {
   final void Function(int) onNavigate;
@@ -114,7 +114,7 @@ class _DashboardView extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
 
-              // ── Profile card ─────────────────────────────────────────────
+              // Profile card 
               GlassCard(
                 borderColor: AppColors.primaryGreen.withValues(alpha: 0.3),
                 child: Row(
@@ -215,7 +215,7 @@ class _DashboardView extends StatelessWidget {
 
               const SizedBox(height: 22),
 
-              // ── Quick Actions ─────────────────────────────────────────────
+              // Quick Actions 
               Text('Quick Actions',
                       style: Theme.of(context).textTheme.titleLarge)
                   .animate()
@@ -314,7 +314,7 @@ class _DashboardView extends StatelessWidget {
 
               const SizedBox(height: 28),
 
-              // ── My Help Requests preview ──────────────────────────────────
+              // My Help Requests
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -408,7 +408,7 @@ class _DashboardView extends StatelessWidget {
 
               const SizedBox(height: 28),
 
-              // ── Session History ───────────────────────────────────────────
+              // Session history
               Text('Session History',
                       style: Theme.of(context).textTheme.titleLarge)
                   .animate()
@@ -441,7 +441,7 @@ class _DashboardView extends StatelessWidget {
 
               const SizedBox(height: 28),
 
-              // ── Study History ─────────────────────────────────────────────
+              // Study History 
               if (sessionProvider.studyHistory.isNotEmpty) ...[
                 Text('Study History',
                         style: Theme.of(context).textTheme.titleLarge)
@@ -490,7 +490,7 @@ class _DashboardView extends StatelessWidget {
   }
 }
 
-// ── Quick Action Card ──────────────────────────────────────────────────────
+// Quick Action Card 
 
 class _QuickActionCard extends StatelessWidget {
   final String title;

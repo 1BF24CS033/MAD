@@ -2,7 +2,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/reward_model.dart';
 import 'supabase_service.dart';
 
-/// Handles all database operations for [rewards] and [reward_redemptions].
 class RewardService {
   static SupabaseClient get _db => SupabaseService.client;
 

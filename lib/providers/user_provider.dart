@@ -16,7 +16,7 @@ class UserProvider extends ChangeNotifier {
   String? get error => _error;
   bool get onboardingComplete => _user.onboardingComplete;
 
-  // ── Auth helpers ────────────────────────────────────────────────────────────
+  // Auth helpers 
 
   /// Sign up with email + password, then complete onboarding in one step.
   Future<void> signUp({
@@ -78,7 +78,7 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Profile ─────────────────────────────────────────────────────────────────
+  // Profile 
 
   /// Load the profile for the currently authenticated user.
   Future<void> loadUser() async {
@@ -169,7 +169,7 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  // ── Private helpers ─────────────────────────────────────────────────────────
+  // Private helpers 
 
   void _setLoading(bool value) {
     _loading = value;

@@ -60,7 +60,7 @@ class _ChatScreenState extends State<ChatScreen> {
           .from('messages')
           .select(_select)
           .eq('request_id', widget.requestId)
-          .order('created_at');
+          .order('created_at', ascending: true);
 
       if (!mounted) return;
       setState(() {

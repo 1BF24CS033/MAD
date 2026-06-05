@@ -80,7 +80,7 @@ class SessionService {
     }).eq('id', sessionId);
   }
 
-  // ── Study History ───────────────────────────────────────────────────────────
+  // Study History
 
   static Future<List<String>> fetchStudyHistory(String userId) async {
     final rows = await _db

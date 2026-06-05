@@ -143,7 +143,7 @@ class HelpRequestService {
         .eq('id', requestId);
   }
 
-  // ── Group Study ──────────────────────────────────────────────────────────
+  // Group Study 
 
   /// All open group studies.
   static Future<List<HelpRequest>> fetchOpenGroupStudies(
